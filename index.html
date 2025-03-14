@@ -451,7 +451,9 @@
   <audio id="successAudio" src="success.mp3"></audio>
   <audio id="failAudio" src="fail.mp3"></audio>
   <audio id="goldSale" src="goldSale.mp3"></audio>
-  
+  <audio id="captureSuccess" src="captureSuccess.mp3"></audio>
+  <audio id="captureFail" src="captureFail.mp3"></audio>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
@@ -761,6 +763,7 @@
             capturedOverlayElem.innerText = "Captured!";
             document.getElementById("captureContent").appendChild(capturedOverlayElem);
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            document.getElementById("captureSuccess").play();
             setTimeout(() => {
               // Duplicate check: increment count if exists, else add new
               let existing = capturedStuffies.find(s => s.name === stuffy.name);
@@ -790,6 +793,7 @@
             failOverlay.className = "fail-overlay";
             failOverlay.innerText = "❌ Failed to Capture!";
             document.getElementById("captureContent").appendChild(failOverlay);
+            document.getElementById("captureFail").play();
             setTimeout(() => {
               map.removeLayer(marker);
               activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
