@@ -2,32 +2,72 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>GeoStuffy - Stuffed Animal Capture Game</title>
+  <title>GeoStuffy - Stuffy Capture Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
   <style>
     body, html { margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif; background: #f0f0f0; }
     #map { height: 70vh; width: 100%; }
 
-    /* Stuffies as Images with Rarity Dots */
+    /* Smaller Stuffy Markers */
     .stuffy-marker { position: absolute; transform: translate(-50%, -50%); text-align: center; }
-    .stuffy-image { width: 50px; height: 50px; border-radius: 10px; display: block; }
+    .stuffy-image { width: 35px; height: 35px; border-radius: 5px; display: block; filter: brightness(1); }
 
-    /* Rarity Indicator */
-    .rarity-dot { width: 12px; height: 12px; border-radius: 50%; position: absolute; top: -5px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 4px rgba(0,0,0,0.5); }
-    .normal { background-color: gray; }
-    .rare { background-color: blue; }
-    .epic { background-color: purple; }
-    .legendary { background-color: gold; animation: glow 1.5s infinite alternate; }
-
-    @keyframes glow { 0% { box-shadow: 0 0 5px gold; } 100% { box-shadow: 0 0 15px gold; } }
+    /* Rarity Glow */
+    .normal { filter: brightness(1); }
+    .rare { filter: brightness(1.2) hue-rotate(220deg); }
+    .epic { filter: brightness(1.3) hue-rotate(270deg); }
+    .legendary { filter: brightness(1.5) hue-rotate(40deg) drop-shadow(0px 0px 6px gold); }
 
     /* Interaction Circle */
     .interaction-circle { stroke: blue; fill: blue; fill-opacity: 0.2; }
+    
+    /* Capture Overlay */
+    #captureOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 4000;
+    }
+    #captureContent {
+      background: #222;
+      padding: 20px;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      text-align: center;
+    }
+    #rollDisplay { font-size: 2.5em; margin: 20px 0; }
+    #neededRoll { font-size: 1.2em; margin-bottom: 10px; }
+
+    /* Buttons */
+    button { padding: 10px 20px; font-size: 1em; cursor: pointer; border: none; border-radius: 5px; }
+    #rollCaptureBtn { background-color: #4CAF50; color: #fff; }
+    #closeCapture { background-color: #f44336; color: #fff; }
   </style>
 </head>
 <body>
   <div id="map"></div>
+
+  <!-- Capture Overlay -->
+  <div id="captureOverlay">
+    <div id="captureContent">
+      <h2 id="stuffyName">Stuffy</h2>
+      <p id="neededRoll"></p>
+      <p id="stuffyGold"></p>
+      <img id="stuffyImage" src="" style="width:100px;">
+      <div id="rollDisplay">--</div>
+      <button id="rollCaptureBtn">Roll Capture</button>
+      <button id="closeCapture">Cancel</button>
+    </div>
+  </div>
+
   <button onclick="transferToHome()">Transfer to Home</button>
   <div id="collection"><h2>Your Captured Stuffies</h2><div id="collectionDisplay"></div></div>
 
@@ -37,34 +77,38 @@
     let homeLocation = null;
     let capturedStuffies = [];
     let activeStuffies = [];
-    const maxStuffies = 40; // Limit active stuffies
-    const respawnDelay = 10 * 60 * 1000; // 10-minute respawn delay
+    const maxStuffies = 25; // 25 within 1 mile
+    const respawnDelay = 10 * 60 * 1000; // 10-minute respawn
+    let playerLat, playerLng;
 
     const rarityLevels = {
-      normal: { chance: 60, name: "Cuddly Stuffy", color: "normal", successRate: 70 },
-      rare: { chance: 25, name: "Mystic Stuffy", color: "rare", successRate: 50 },
-      epic: { chance: 10, name: "Ethereal Stuffy", color: "epic", successRate: 30 },
-      legendary: { chance: 5, name: "Celestial Stuffy", color: "legendary", successRate: 10 }
+      normal: { chance: 60, name: "Cuddly Stuffy", gold: 10, successRate: 70, cssClass: "normal" },
+      rare: { chance: 25, name: "Mystic Stuffy", gold: 30, successRate: 50, cssClass: "rare" },
+      epic: { chance: 10, name: "Ethereal Stuffy", gold: 100, successRate: 30, cssClass: "epic" },
+      legendary: { chance: 5, name: "Celestial Stuffy", gold: 500, successRate: 10, cssClass: "legendary" }
     };
 
     /***** MAP SETUP *****/
     var map = L.map('map').setView([51.505, -0.09], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    var playerMarker = L.marker([51.505, -0.09], { icon: L.divIcon({ className: '', html: '<div class="blinking-circle"></div>', iconSize: [10, 10], iconAnchor: [5, 5] })}).addTo(map);
+    var playerMarker = L.marker([51.505, -0.09]).addTo(map);
     var interactionRadius = 230;
     var interactionCircle = L.circle(playerMarker.getLatLng(), { radius: interactionRadius, className: 'interaction-circle' }).addTo(map);
 
-    /***** SPAWNING STUFFIES (LIMIT ACTIVE STUFFIES) *****/
-    function spawnStuffies(playerLat, playerLng) {
-      while (activeStuffies.length < maxStuffies) {
+    /***** SPAWNING STUFFIES NEARBY (DYNAMICALLY UPDATING AS YOU MOVE) *****/
+    function spawnStuffies() {
+      if (activeStuffies.length >= maxStuffies) return;
+
+      for (let i = activeStuffies.length; i < maxStuffies; i++) {
         let rarity = assignRarity();
-        let point = randomPointNearRoads(playerLat, playerLng, 5);
+        let point = randomPointNearPlayer();
         let stuffy = {
           id: `stuffy_${Date.now()}`,
           name: `${rarity.name}`,
           rarity: rarity,
           lat: point.lat,
           lng: point.lng,
+          gold: rarity.gold,
           image: `Subject${(Math.floor(Math.random() * 50) + 1)}.png`
         };
         createStuffyMarker(stuffy);
@@ -82,67 +126,52 @@
       return rarityLevels.normal;
     }
 
-    function randomPointNearRoads(lat, lng, radiusMiles) {
-      let degreesPerMile = 1 / 69;
-      let r = radiusMiles * degreesPerMile * Math.sqrt(Math.random());
+    function randomPointNearPlayer() {
+      let r = Math.random() * 0.015; // ~1 mile max
       let theta = Math.random() * 2 * Math.PI;
-      return { lat: lat + r * Math.cos(theta), lng: lng + r * Math.sin(theta) };
+      return { lat: playerLat + r * Math.cos(theta), lng: playerLng + r * Math.sin(theta) };
     }
 
     function createStuffyMarker(stuffy) {
       let marker = L.marker([stuffy.lat, stuffy.lng], {
         icon: L.divIcon({
-          className: 'stuffy-marker',
-          html: `<div class="rarity-dot ${stuffy.rarity.color}"></div><img src="${stuffy.image}" class="stuffy-image">`,
-          iconSize: [50, 50],
-          iconAnchor: [25, 25]
+          className: `stuffy-marker ${stuffy.rarity.cssClass}`,
+          html: `<img src="${stuffy.image}" class="stuffy-image">`,
+          iconSize: [35, 35],
+          iconAnchor: [17, 17]
         })
       }).addTo(map);
       marker.on('click', () => startCapture(stuffy, marker));
     }
 
-    /***** CAPTURE LOGIC & 10-MIN RESPAWN TIMER *****/
+    /***** CAPTURE SYSTEM *****/
     function startCapture(stuffy, marker) {
-      let roll = Math.floor(Math.random() * 100) + 1;
-      if (roll <= stuffy.rarity.successRate) {
-        alert(`You captured ${stuffy.name}!`);
-        capturedStuffies.push(stuffy);
-        updateStuffyCollection();
-        map.removeLayer(marker);
-        activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
-        setTimeout(() => spawnStuffies(playerMarker.getLatLng().lat, playerMarker.getLatLng().lng), respawnDelay);
-      } else {
-        alert(`Capture failed!`);
-      }
+      document.getElementById("captureOverlay").style.display = "flex";
+      document.getElementById("stuffyName").innerText = stuffy.name;
+      document.getElementById("neededRoll").innerText = `Roll ${stuffy.rarity.successRate} or higher to capture`;
+      document.getElementById("stuffyGold").innerText = `Gold Value: ${stuffy.gold}`;
+      document.getElementById("stuffyImage").src = stuffy.image;
+
+      document.getElementById("rollCaptureBtn").onclick = function () {
+        let roll = Math.floor(Math.random() * 100) + 1;
+        document.getElementById("rollDisplay").innerText = roll;
+        if (roll >= stuffy.rarity.successRate) {
+          alert(`Captured ${stuffy.name}!`);
+          capturedStuffies.push(stuffy);
+          map.removeLayer(marker);
+          activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
+        } else alert("Capture failed!");
+      };
     }
 
-    /***** HOME BASE STORAGE *****/
-    function transferToHome() {
-      if (capturedStuffies.length === 0) {
-        alert("No stuffies to transfer!");
-        return;
-      }
-      let homeStorage = JSON.parse(localStorage.getItem("homeStuffies") || "[]");
-      homeStorage.push(...capturedStuffies);
-      localStorage.setItem("homeStuffies", JSON.stringify(homeStorage));
-      capturedStuffies = [];
-      updateStuffyCollection();
-      alert("All stuffies have been transferred to your home!");
-    }
-
-    function updateStuffyCollection() {
-      let collectionDiv = document.getElementById("collectionDisplay");
-      collectionDiv.innerHTML = capturedStuffies.map(stuffy => `<img src="${stuffy.image}" class="stuffy-img">`).join('');
-    }
-
-    navigator.geolocation.getCurrentPosition(position => {
-      let lat = position.coords.latitude;
-      let lng = position.coords.longitude;
-      map.setView([lat, lng], 15);
-      playerMarker.setLatLng([lat, lng]);
-      interactionCircle.setLatLng([lat, lng]);
-      spawnStuffies(lat, lng);
+    navigator.geolocation.watchPosition(position => {
+      playerLat = position.coords.latitude;
+      playerLng = position.coords.longitude;
+      map.setView([playerLat, playerLng], 15);
+      playerMarker.setLatLng([playerLat, playerLng]);
+      spawnStuffies();
     });
+
   </script>
 </body>
 </html>
