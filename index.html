@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>GeoStuffy - Stuffed Animal Capture Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Leaflet CSS -->
+  <title>GeoStuffy - Stuffy Capture Game</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
   <style>
-    /* Basic Reset & Layout */
     body, html {
       margin: 0;
       padding: 0;
@@ -15,333 +13,147 @@
       font-family: Arial, sans-serif;
       background: #f0f0f0;
     }
-    /* Map Container (70% of viewport height) */
-    #map {
-      height: 70vh;
-      width: 100%;
-    }
-    /* Capture Overlay (full screen) */
-    #captureOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      color: #fff;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 4000;
-    }
-    #captureContent {
-      background: #222;
-      padding: 20px;
-      border: 2px solid #fff;
-      border-radius: 8px;
-      text-align: center;
-      max-width: 90%;
-    }
-    #rollDisplay {
-      font-size: 3em;
-      margin: 20px 0;
-      min-height: 60px;
-    }
-    button {
-      padding: 10px 20px;
-      margin: 10px;
-      font-size: 1em;
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-      background-color: #4CAF50;
-      color: #fff;
-    }
-    #closeCapture {
-      background-color: #f44336;
-    }
-    /* Collection Display */
-    #collection {
-      padding: 10px;
-      background: #fff;
-      border-top: 2px solid #ccc;
-      text-align: center;
-    }
-    #collection h2 {
-      margin-top: 0;
-    }
-    .stuffy-img {
-      width: 50px;
-      height: auto;
-      margin: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    /* Player Marker – Blinking Circle (10×10px) */
-    .blinking-circle {
-      width: 10px;
-      height: 10px;
-      background: rgba(0,0,255,0.6);
-      border: 1px solid white;
-      border-radius: 50%;
-      box-shadow: 0 0 3px 1px rgba(0,0,255,0.5);
-      animation: blink 1s infinite;
-    }
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0.2; }
-      100% { opacity: 1; }
-    }
-    /* Stuffy Marker Icon (10×10px) */
-    .stuffy-icon {
-      width: 10px;
-      height: 10px;
-      border: 1px solid #000;
-      border-radius: 50%;
-      background: pink;
-    }
-    /* Interaction Circle styling */
-    .interaction-circle {
-      stroke: blue;
-      fill: blue;
-      fill-opacity: 0.2;
-    }
+    #map { height: 70vh; width: 100%; }
+    .stuffy-img { width: 50px; height: auto; margin: 5px; border: 1px solid #ccc; border-radius: 5px; }
+    .interaction-circle { stroke: blue; fill: blue; fill-opacity: 0.2; }
+    .blinking-circle { width: 10px; height: 10px; background: blue; border-radius: 50%; animation: blink 1s infinite; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
   </style>
 </head>
 <body>
-  <!-- Map Container -->
   <div id="map"></div>
-  
-  <!-- Capture Overlay -->
-  <div id="captureOverlay">
-    <div id="captureContent">
-      <h2 id="stuffyName">Stuffy</h2>
-      <p id="stuffyDescription">A cute stuffed animal waiting to be captured!</p>
-      <img id="stuffyImage" src="" alt="Stuffy" style="width:150px; margin-bottom:20px;">
-      <div id="rollDisplay">--</div>
-      <button id="rollCaptureBtn">Roll Capture</button>
-      <button id="closeCapture">Cancel</button>
-      <p id="captureResult"></p>
-    </div>
-  </div>
-  
-  <!-- Collection Display -->
-  <div id="collection">
-    <h2>Your Collection</h2>
-    <div id="collectionDisplay">No stuffed animals captured yet.</div>
-  </div>
-  
-  <!-- Leaflet JS -->
+  <button onclick="transferToHome()">Transfer to Home</button>
+  <div id="collection"><h2>Your Captured Stuffies</h2><div id="collectionDisplay"></div></div>
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     /***** GLOBAL VARIABLES *****/
-    let currentStuffy = null; // Current stuffy object for capture
-    const captureThreshold = 50; // Capture succeeds if roll <= 50
+    let homeLocation = null;
+    let capturedStuffies = [];
+    const rarityLevels = {
+      normal: { chance: 60, name: "Cuddly Stuffy", successRate: 70 },
+      rare: { chance: 25, name: "Mystic Stuffy", successRate: 50 },
+      epic: { chance: 10, name: "Ethereal Stuffy", successRate: 30 },
+      legendary: { chance: 5, name: "Celestial Stuffy", successRate: 10 }
+    };
 
-    // Use your GitHub raw image URLs from the GeoStuffy repository
-    const stuffyImageUrls = [
-      "https://raw.githubusercontent.com/black6ja/GeoStuffy/refs/heads/main/Subject.png",
-      "https://raw.githubusercontent.com/black6ja/GeoStuffy/refs/heads/main/Subject2.png",
-      "https://raw.githubusercontent.com/black6ja/GeoStuffy/refs/heads/main/Subject3.png"
-    ];
-
-    // Randomly choose one image URL for a stuffy
-    function getRandomImageUrl() {
-      const index = Math.floor(Math.random() * stuffyImageUrls.length);
-      return stuffyImageUrls[index];
-    }
-    
-    /***** MAP & GEOPOSITIONING SETUP *****/
-    var defaultLat = 51.505, defaultLng = -0.09;
-    var map = L.map('map').setView([defaultLat, defaultLng], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-    
-    // Create player marker (blinking circle)
-    var playerIcon = L.divIcon({
-      className: '',
-      html: '<div class="blinking-circle"></div>',
-      iconSize: [10, 10],
-      iconAnchor: [5, 5]
-    });
-    var playerMarker = L.marker([defaultLat, defaultLng], {icon: playerIcon}).addTo(map);
-    
-    // Define interaction radius (230 m ≈ 250 yards)
+    /***** MAP SETUP *****/
+    var map = L.map('map').setView([51.505, -0.09], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    var playerMarker = L.marker([51.505, -0.09], { icon: L.divIcon({ className: '', html: '<div class="blinking-circle"></div>', iconSize: [10, 10], iconAnchor: [5, 5] })}).addTo(map);
     var interactionRadius = 230;
-    var interactionCircle = L.circle(playerMarker.getLatLng(), {
-      radius: interactionRadius,
-      className: 'interaction-circle'
-    }).addTo(map);
-    
-    // Update player's position on geolocation updates
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(function(position) {
-        var lat = position.coords.latitude;
-        var lng = position.coords.longitude;
-        var newLatLng = [lat, lng];
-        playerMarker.setLatLng(newLatLng);
-        interactionCircle.setLatLng(newLatLng);
-      }, function(error) {
-        console.error("Geolocation error: " + error.message);
-      }, {enableHighAccuracy: true, maximumAge: 3000, timeout: 5000});
-    }
-    
-    /***** SPAWN STUFFED ANIMAL (STUFFY) MARKERS *****/
-    // Create a custom icon for stuffed animals
-    var stuffyIcon = L.divIcon({
-      className: '',
-      html: '<div class="stuffy-icon"></div>',
-      iconSize: [10, 10],
-      iconAnchor: [5, 5]
-    });
-    var stuffyMarkers = [];
-    // Instead of a 1-mile radius, we now spawn ALL markers within the interaction circle.
-    // Calculate a spawn radius in degrees that is slightly less than the interaction circle.
-    // 1 degree ≈ 111320 m, so for 230 m, the degrees = 230 / 111320 ≈ 0.00207. We'll use 0.002 to be safe.
-    var inRangeSpawnDegrees = 0.002;
-    
-    // Helper: Generate a random point within a given radius (in degrees)
-    function randomPointInRadius(lat, lng, radius) {
-      var r = radius * Math.sqrt(Math.random());
-      var theta = Math.random() * 2 * Math.PI;
-      var dLat = r * Math.cos(theta);
-      var dLng = r * Math.sin(theta) / Math.cos(lat * Math.PI/180);
-      return [lat + dLat, lng + dLng];
-    }
-    
-    // Return a random stuffy object
-    function getRandomStuffy() {
-      return {
-        id: Date.now(),
-        name: "Cuddly Stuffy",
-        captureThreshold: captureThreshold,
-        image: getRandomImageUrl(),
-        description: "A cute stuffed animal waiting to be captured!"
-      };
-    }
-    
-    // Generate a bunch of stuffed animal markers, all within the in-range radius.
-    function generateInitialStuffyMarkers(baseLat, baseLng) {
-      for (let i = 0; i < 20; i++) {
-        var point = randomPointInRadius(baseLat, baseLng, inRangeSpawnDegrees);
-        var stuffyData = getRandomStuffy();
-        var marker = L.marker(point, {icon: stuffyIcon}).addTo(map);
-        marker.on('click', function() {
-          var playerPos = playerMarker.getLatLng();
-          var markerPos = marker.getLatLng();
-          // Debug log (optional): console.log("Marker distance:", playerPos.distanceTo(markerPos));
-          if (playerPos.distanceTo(markerPos) <= interactionRadius * 1.1) {
-            startCapture(stuffyData, marker);
-          } else {
-            alert("That stuffed animal is out of range. Move closer to capture it.");
-          }
-        });
-        stuffyMarkers.push(marker);
+    var interactionCircle = L.circle(playerMarker.getLatLng(), { radius: interactionRadius, className: 'interaction-circle' }).addTo(map);
+
+    /***** SPAWNING STUFFIES *****/
+    function spawnStuffies(playerLat, playerLng) {
+      const stuffies = [];
+      for (let i = 0; i < 100; i++) {
+        let rarity = assignRarity();
+        let point = randomPointNearRoads(playerLat, playerLng, 5);
+        let stuffy = {
+          id: `stuffy_${i}`,
+          name: `${rarity.name} #${i+1}`,
+          rarity: rarity,
+          lat: point.lat,
+          lng: point.lng,
+          image: `Subject${(i % 50) + 1}.png`
+        };
+        let marker = L.marker([stuffy.lat, stuffy.lng]).addTo(map);
+        marker.on('click', function() { startCapture(stuffy, marker); });
+        stuffies.push(stuffy);
       }
+      return stuffies;
     }
-    
-    // When geolocation is available, center the map and generate markers
-    navigator.geolocation.getCurrentPosition(function(position) {
-      var lat = position.coords.latitude;
-      var lng = position.coords.longitude;
-      map.setView([lat, lng], 15);
-      playerMarker.setLatLng([lat, lng]);
-      interactionCircle.setLatLng([lat, lng]);
-      generateInitialStuffyMarkers(lat, lng);
-    }, function(error) {
-      console.error("Error getting initial position: " + error.message);
-      generateInitialStuffyMarkers(defaultLat, defaultLng);
-    });
-    
-    /***** CAPTURE OVERLAY FUNCTIONALITY *****/
-    var captureOverlay = document.getElementById("captureOverlay");
-    var stuffyNameEl = document.getElementById("stuffyName");
-    var stuffyDescriptionEl = document.getElementById("stuffyDescription");
-    var stuffyImageEl = document.getElementById("stuffyImage");
-    var rollDisplayEl = document.getElementById("rollDisplay");
-    var captureResultEl = document.getElementById("captureResult");
-    var rollCaptureBtn = document.getElementById("rollCaptureBtn");
-    var closeCaptureBtn = document.getElementById("closeCapture");
-    
+
+    function assignRarity() {
+      let roll = Math.random() * 100;
+      let cumulative = 0;
+      for (let key in rarityLevels) {
+        cumulative += rarityLevels[key].chance;
+        if (roll <= cumulative) return rarityLevels[key];
+      }
+      return rarityLevels.normal;
+    }
+
+    function randomPointNearRoads(lat, lng, radiusMiles) {
+      let degreesPerMile = 1 / 69;
+      let r = radiusMiles * degreesPerMile * Math.sqrt(Math.random());
+      let theta = Math.random() * 2 * Math.PI;
+      let newLat = lat + r * Math.cos(theta);
+      let newLng = lng + r * Math.sin(theta) / Math.cos(lat * Math.PI/180);
+      return { lat: newLat, lng: newLng };
+    }
+
+    /***** INTERACTIVE CAPTURE MECHANIC *****/
     function startCapture(stuffy, marker) {
-      currentStuffy = stuffy;
-      // Populate overlay with stuffy's details
-      stuffyNameEl.textContent = stuffy.name;
-      stuffyDescriptionEl.textContent = stuffy.description;
-      stuffyImageEl.src = stuffy.image;
-      rollDisplayEl.textContent = "--";
-      captureResultEl.textContent = "";
-      captureOverlay.style.display = "flex";
-      
-      rollCaptureBtn.onclick = function() {
-        rollCaptureBtn.disabled = true;
-        captureResultEl.textContent = "Rolling...";
-        animateRoll(100, 2000, function(finalRoll) {
-          rollDisplayEl.textContent = finalRoll;
-          if (finalRoll <= stuffy.captureThreshold) {
-            captureResultEl.textContent = `Success! (Roll: ${finalRoll})`;
-            saveCapturedStuffy(stuffy);
-            map.removeLayer(marker);
-          } else {
-            captureResultEl.textContent = `Capture failed. (Roll: ${finalRoll})`;
-          }
-          setTimeout(function() {
-            rollCaptureBtn.disabled = false;
-            captureOverlay.style.display = "none";
-          }, 2000);
-        });
-      };
-      
-      closeCaptureBtn.onclick = function() {
-        captureOverlay.style.display = "none";
-      };
+      let roll = Math.random() * 100;
+      let success = roll <= stuffy.rarity.successRate;
+      animateWheelRoll(roll, () => {
+        if (success) {
+          alert(`Success! You captured a ${stuffy.name}!`);
+          capturedStuffies.push(stuffy);
+          updateStuffyCollection();
+          map.removeLayer(marker);
+        } else {
+          alert(`Failed! The ${stuffy.name} escaped!`);
+        }
+      });
     }
-    
-    function animateRoll(maxValue, duration, callback) {
-      var startTime = Date.now();
-      var interval = setInterval(function() {
-        rollDisplayEl.textContent = Math.floor(Math.random() * maxValue) + 1;
-        if (Date.now() - startTime > duration) {
+
+    function animateWheelRoll(finalRoll, callback) {
+      let startTime = Date.now();
+      let duration = 2000;
+      let interval = setInterval(() => {
+        console.log("Rolling: " + (Math.floor(Math.random() * 100) + 1));
+        if (Date.now() - startTime >= duration) {
           clearInterval(interval);
-          var finalRoll = Math.floor(Math.random() * maxValue) + 1;
-          rollDisplayEl.textContent = finalRoll;
-          callback(finalRoll);
+          console.log("Final Roll: " + finalRoll);
+          callback();
         }
       }, 100);
     }
-    
-    function saveCapturedStuffy(stuffy) {
-      let collection = JSON.parse(localStorage.getItem("capturedStuffies") || "[]");
-      stuffy.capturedAt = new Date().toISOString();
-      collection.push(stuffy);
-      localStorage.setItem("capturedStuffies", JSON.stringify(collection));
-      updateCollectionDisplay();
+
+    /***** HOME BASE STORAGE *****/
+    function setHomeLocation(lat, lng) {
+      homeLocation = { lat, lng };
+      L.marker([lat, lng], { icon: L.divIcon({ className: '', html: '<div style="background:red; width:15px; height:15px; border-radius:50%;"></div>', iconSize: [15, 15], iconAnchor: [7, 7] })}).addTo(map).bindPopup("Home Base");
     }
-    
-    function updateCollectionDisplay() {
-      const collectionDisplay = document.getElementById("collectionDisplay");
-      let collection = JSON.parse(localStorage.getItem("capturedStuffies") || "[]");
-      if (collection.length === 0) {
-        collectionDisplay.textContent = "No stuffed animals captured yet.";
-      } else {
-        collectionDisplay.innerHTML = "";
-        collection.forEach(stuffy => {
-          let container = document.createElement("div");
-          container.style.display = "inline-block";
-          container.style.margin = "5px";
-          let img = document.createElement("img");
-          img.src = stuffy.image;
-          img.alt = stuffy.name;
-          img.className = "stuffy-img";
-          container.appendChild(img);
-          collectionDisplay.appendChild(container);
-        });
+
+    function transferToHome() {
+      if (capturedStuffies.length === 0) {
+        alert("No stuffies to transfer!");
+        return;
       }
+      let homeStorage = JSON.parse(localStorage.getItem("homeStuffies")) || [];
+      homeStorage.push(...capturedStuffies);
+      localStorage.setItem("homeStuffies", JSON.stringify(homeStorage));
+      capturedStuffies = [];
+      updateStuffyCollection();
+      alert("All stuffies have been transferred to your home!");
     }
-    
-    updateCollectionDisplay();
+
+    function updateStuffyCollection() {
+      let collectionDiv = document.getElementById("collectionDisplay");
+      collectionDiv.innerHTML = "";
+      capturedStuffies.forEach(stuffy => {
+        let img = document.createElement("img");
+        img.src = stuffy.image;
+        img.alt = stuffy.name;
+        img.className = "stuffy-img";
+        collectionDiv.appendChild(img);
+      });
+    }
+
+    /***** INITIALIZATION *****/
+    navigator.geolocation.getCurrentPosition(function(position) {
+      let lat = position.coords.latitude;
+      let lng = position.coords.longitude;
+      map.setView([lat, lng], 15);
+      playerMarker.setLatLng([lat, lng]);
+      interactionCircle.setLatLng([lat, lng]);
+      setHomeLocation(lat, lng);
+      spawnStuffies(lat, lng);
+    });
   </script>
 </body>
 </html>
