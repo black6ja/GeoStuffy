@@ -9,6 +9,22 @@
     body, html { margin: 0; padding: 0; height: 100%; font-family: Arial, sans-serif; background: #f0f0f0; }
     #map { height: 70vh; width: 100%; }
 
+    /* Player Blinking Dot */
+    .blinking-circle {
+      width: 12px;
+      height: 12px;
+      background: rgba(0,0,255,0.7);
+      border: 2px solid white;
+      border-radius: 50%;
+      box-shadow: 0 0 5px rgba(0,0,255,0.8);
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+
     /* Smaller Stuffy Markers */
     .stuffy-marker { position: absolute; transform: translate(-50%, -50%); text-align: center; }
     .stuffy-image { width: 35px; height: 35px; border-radius: 5px; display: block; filter: brightness(1); }
@@ -21,7 +37,7 @@
 
     /* Interaction Circle */
     .interaction-circle { stroke: blue; fill: blue; fill-opacity: 0.2; }
-    
+
     /* Capture Overlay */
     #captureOverlay {
       position: fixed;
@@ -68,13 +84,9 @@
     </div>
   </div>
 
-  <button onclick="transferToHome()">Transfer to Home</button>
-  <div id="collection"><h2>Your Captured Stuffies</h2><div id="collectionDisplay"></div></div>
-
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     /***** GLOBAL VARIABLES *****/
-    let homeLocation = null;
     let capturedStuffies = [];
     let activeStuffies = [];
     const maxStuffies = 25; // 25 within 1 mile
@@ -91,15 +103,24 @@
     /***** MAP SETUP *****/
     var map = L.map('map').setView([51.505, -0.09], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    var playerMarker = L.marker([51.505, -0.09]).addTo(map);
+
+    // Player Marker (Blinking Dot)
+    var playerMarker = L.marker([51.505, -0.09], {
+      icon: L.divIcon({
+        className: '',
+        html: '<div class="blinking-circle"></div>',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6]
+      })
+    }).addTo(map);
+
+    // Interaction Circle
     var interactionRadius = 230;
     var interactionCircle = L.circle(playerMarker.getLatLng(), { radius: interactionRadius, className: 'interaction-circle' }).addTo(map);
 
-    /***** SPAWNING STUFFIES NEARBY (DYNAMICALLY UPDATING AS YOU MOVE) *****/
+    /***** SPAWNING STUFFIES NEARBY *****/
     function spawnStuffies() {
-      if (activeStuffies.length >= maxStuffies) return;
-
-      for (let i = activeStuffies.length; i < maxStuffies; i++) {
+      while (activeStuffies.length < maxStuffies) {
         let rarity = assignRarity();
         let point = randomPointNearPlayer();
         let stuffy = {
@@ -151,17 +172,6 @@
       document.getElementById("neededRoll").innerText = `Roll ${stuffy.rarity.successRate} or higher to capture`;
       document.getElementById("stuffyGold").innerText = `Gold Value: ${stuffy.gold}`;
       document.getElementById("stuffyImage").src = stuffy.image;
-
-      document.getElementById("rollCaptureBtn").onclick = function () {
-        let roll = Math.floor(Math.random() * 100) + 1;
-        document.getElementById("rollDisplay").innerText = roll;
-        if (roll >= stuffy.rarity.successRate) {
-          alert(`Captured ${stuffy.name}!`);
-          capturedStuffies.push(stuffy);
-          map.removeLayer(marker);
-          activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
-        } else alert("Capture failed!");
-      };
     }
 
     navigator.geolocation.watchPosition(position => {
@@ -169,6 +179,7 @@
       playerLng = position.coords.longitude;
       map.setView([playerLat, playerLng], 15);
       playerMarker.setLatLng([playerLat, playerLng]);
+      interactionCircle.setLatLng([playerLat, playerLng]);
       spawnStuffies();
     });
 
