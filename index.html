@@ -479,19 +479,104 @@
     
     // Sample shop inventory (you can expand these arrays later)
     const shopInventory = {
-      toys: [
-        { id: 'toy1', image: 'toy1.png', cost: 20, availableFor: ['normal', 'rare', 'epic', 'legendary'] },
-        { id: 'toy2', image: 'toy2.png', cost: 50, availableFor: ['epic', 'legendary'] }
-      ],
-      candy: [
-        { id: 'candy1', image: 'candy1.png', cost: 10, availableFor: ['normal', 'rare'] },
-        { id: 'candy2', image: 'candy2.png', cost: 30, availableFor: ['epic', 'legendary'] }
-      ],
-      houses: [
-        { id: 'house1', image: 'house1.png', cost: 100, availableFor: ['rare', 'epic'] },
-        { id: 'house2', image: 'house2.png', cost: 200, availableFor: ['legendary'] }
-      ]
-    };
+  toys: [
+    {
+      id: 'toy1',
+      image: 'toy1.png',
+      cost: 15,
+      desc: 'A colorful plush ball.',
+      availableFor: ['normal', 'rare', 'epic', 'legendary']
+    },
+    {
+      id: 'toy2',
+      image: 'toy2.png',
+      cost: 25,
+      desc: 'A silly plush car.',
+      availableFor: ['normal', 'rare', 'epic', 'legendary']
+    },
+    {
+      id: 'toy3',
+      image: 'toy3.png',
+      cost: 40,
+      desc: 'A playful plush train.',
+      availableFor: ['rare', 'epic', 'legendary']
+    },
+    {
+      id: 'toy4',
+      image: 'toy4.png',
+      cost: 50,
+      desc: 'A friendly plush airplane.',
+      availableFor: ['epic', 'legendary']
+    },
+    {
+      id: 'toy5',
+      image: 'toy5.png',
+      cost: 60,
+      desc: 'A classic rocking horse plush.',
+      availableFor: ['legendary']
+    }
+  ],
+  candy: [
+    {
+      id: 'candy1',
+      image: 'candy1.png',
+      cost: 10,
+      desc: 'A colorful lollipop plush!',
+      availableFor: ['normal', 'rare', 'epic', 'legendary']
+    },
+    {
+      id: 'candy2',
+      image: 'candy2.png',
+      cost: 15,
+      desc: 'A soft candy plush treat!',
+      availableFor: ['normal', 'rare', 'epic', 'legendary']
+    },
+    {
+      id: 'candy3',
+      image: 'candy3.png',
+      cost: 20,
+      desc: 'A sweet puffy cube plush!',
+      availableFor: ['epic', 'legendary']
+    }
+  ],
+  houses: [
+    {
+      id: 'house1',
+      image: 'house1.png',
+      cost: 100,
+      desc: 'A cozy pastel cottage.',
+      availableFor: ['normal', 'rare', 'epic', 'legendary']
+    },
+    {
+      id: 'house2',
+      image: 'house2.png',
+      cost: 150,
+      desc: 'A charming mushroom house.',
+      availableFor: ['rare', 'epic', 'legendary']
+    },
+    {
+      id: 'house3',
+      image: 'house3.png',
+      cost: 200,
+      desc: 'A leafy woodland abode.',
+      availableFor: ['epic', 'legendary']
+    },
+    {
+      id: 'house4',
+      image: 'house4.png',
+      cost: 300,
+      desc: 'A whimsical fairytale castle!',
+      availableFor: ['legendary']
+    },
+    {
+      id: 'house5',
+      image: 'house5.png',
+      cost: 400,
+      desc: 'A cozy igloo for chilly stuffies.',
+      availableFor: ['epic', 'legendary']
+    }
+  ]
+};
     
     /***** LOAD STUFFY DETAILS FROM JSON *****/
     fetch('stuffyDetails.json')
