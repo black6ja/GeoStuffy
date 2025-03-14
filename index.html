@@ -346,15 +346,20 @@
   <div id="detailsOverlay">
     <div id="detailsContent">
       <h2 id="detailName">Stuffy Details</h2>
-      <img id="detailImage" src="" alt="Stuffy">
-      <p id="detailEats"></p>
-      <p id="detailFavColor"></p>
-      <p id="detailFavActivity"></p>
-      <p id="detailRarity"></p>
-      <p id="detailGold"></p>
-      <button id="sellStuffyBtn">Sell for Gold</button>
-      <button id="openShopBtn">Shop</button>
-      <button id="closeDetails">Close</button>
+    <img id="detailImage" src="" alt="Stuffy">
+    <p id="detailEats"></p>
+    <p id="detailFavColor"></p>
+    <p id="detailFavActivity"></p>
+    <p id="detailRarity"></p>
+    <p id="detailGold"></p>
+
+    <!-- New Purchased Items Section -->
+    <h3>Purchased Items</h3>
+    <div id="purchasedItems" style="display: flex; flex-wrap: wrap; justify-content: center;"></div>
+
+    <button id="sellStuffyBtn">Sell for Gold</button>
+    <button id="openShopBtn">Shop</button>
+    <button id="closeDetails">Close</button>
     </div>
   </div>
   
@@ -407,6 +412,25 @@
       document.getElementById("goldValue").innerText = playerGold;
     }
     
+    function animatePurchase(item) {
+  // Example: use the same "capture-success" CSS animation (you could also create a dedicated class)
+  const detailImageEl = document.getElementById("detailImage");
+  detailImageEl.classList.add("capture-success");
+  
+  // Trigger a confetti effect (using your canvas-confetti library)
+  confetti({
+    particleCount: 50,
+    spread: 60,
+    origin: { y: 0.5 }
+  });
+  
+  // Remove the animation class after a short delay to reset
+  setTimeout(() => {
+    detailImageEl.classList.remove("capture-success");
+  }, 1000);
+}
+
+
     // Rarity levels (from JSON)
     const rarityLevels = {
       normal: { name: "Cuddly", gold: 10, successRate: 5, cssClass: "normal" },
@@ -848,35 +872,49 @@ const shopInventory = {
     }
     
     function showDetails(stuffyId) {
-      document.getElementById("collectionModal").style.display = "none";
-      
-      const stuffy = capturedStuffies.find(s => s.id === stuffyId);
-      if (!stuffy) return;
-      document.getElementById("detailName").innerText = stuffy.name;
-      document.getElementById("detailImage").src = stuffy.image;
-      document.getElementById("detailEats").innerText = `Eats: ${stuffy.eats || "Unknown"}`;
-      document.getElementById("detailFavColor").innerText = `Favorite Color: ${stuffy.favoriteColor || "Unknown"}`;
-      document.getElementById("detailFavActivity").innerText = `Loves: ${stuffy.favoriteActivity || "Unknown"}`;
-      document.getElementById("detailRarity").innerText = `Rarity: ${stuffy.rarity.name}`;
-      document.getElementById("detailGold").innerText = `Gold Value: ${stuffy.gold}`;
-      
-      // Show Sell and Shop buttons
-      const sellBtn = document.getElementById("sellStuffyBtn");
-      sellBtn.style.display = "inline-block";
-      sellBtn.onclick = function() {
-        sellStuffy(stuffyId);
-      };
-      const shopBtn = document.getElementById("openShopBtn");
-      shopBtn.style.display = "inline-block";
-      shopBtn.onclick = function() {
-        openShop(stuffy);
-      };
-      
-      document.getElementById("detailsOverlay").style.display = "flex";
-      document.getElementById("closeDetails").onclick = function() {
-        document.getElementById("detailsOverlay").style.display = "none";
-      };
-    }
+  document.getElementById("collectionModal").style.display = "none";
+  
+  const stuffy = capturedStuffies.find(s => s.id === stuffyId);
+  if (!stuffy) return;
+  
+  document.getElementById("detailName").innerText = stuffy.name;
+  document.getElementById("detailImage").src = stuffy.image;
+  document.getElementById("detailEats").innerText = `Eats: ${stuffy.eats || "Unknown"}`;
+  document.getElementById("detailFavColor").innerText = `Favorite Color: ${stuffy.favoriteColor || "Unknown"}`;
+  document.getElementById("detailFavActivity").innerText = `Loves: ${stuffy.favoriteActivity || "Unknown"}`;
+  document.getElementById("detailRarity").innerText = `Rarity: ${stuffy.rarity.name}`;
+  document.getElementById("detailGold").innerText = `Gold Value: ${stuffy.gold}`;
+  
+  // Update purchased items display:
+  const purchasedItemsContainer = document.getElementById("purchasedItems");
+  if (stuffy.items && stuffy.items.length > 0) {
+    purchasedItemsContainer.innerHTML = stuffy.items.map(item => `
+      <div style="margin: 5px;">
+        <img src="${item.image}" alt="${item.id}" style="width:50px; height:50px; border: 2px solid #ccc; border-radius:5px; object-fit:cover;">
+      </div>
+    `).join('');
+  } else {
+    purchasedItemsContainer.innerHTML = "None purchased yet.";
+  }
+  
+  // Show Sell and Shop buttons
+  const sellBtn = document.getElementById("sellStuffyBtn");
+  sellBtn.style.display = "inline-block";
+  sellBtn.onclick = function() {
+    sellStuffy(stuffyId);
+  };
+  const shopBtn = document.getElementById("openShopBtn");
+  shopBtn.style.display = "inline-block";
+  shopBtn.onclick = function() {
+    openShop(stuffy);
+  };
+  
+  document.getElementById("detailsOverlay").style.display = "flex";
+  document.getElementById("closeDetails").onclick = function() {
+    document.getElementById("detailsOverlay").style.display = "none";
+  };
+}
+
     
     /***** Sell Functionality *****/
     function sellStuffy(stuffyId) {
@@ -929,28 +967,32 @@ const shopInventory = {
     
     // Purchase an item from the shop for a specific stuffy
     function purchaseItem(itemId, category, stuffyId) {
-      // Find the item in the shopInventory
-      let item = shopInventory[category].find(it => it.id === itemId);
-      if (!item) return;
-      if (playerGold < item.cost) {
-        showAlert("Not enough gold!");
-        return;
-      }
-      // Deduct gold
-      playerGold -= item.cost;
-      savePlayerGold();
-      updateGoldDisplay();
-      // Add the item to the stuffy's personal inventory (initialize if needed)
-      let stuffy = capturedStuffies.find(s => s.id === stuffyId);
-      if (!stuffy) return;
-      if (!stuffy.items) {
-        stuffy.items = [];
-      }
-      stuffy.items.push(item);
-      saveCapturedStuffies();
-      showAlert(`${item.id} purchased for ${item.cost} gold!`);
-      // Optionally, update UI to reflect purchase here.
-    }
+  let item = shopInventory[category].find(it => it.id === itemId);
+  if (!item) return;
+  if (playerGold < item.cost) {
+    showAlert("Not enough gold!");
+    return;
+  }
+  playerGold -= item.cost;
+  savePlayerGold();
+  updateGoldDisplay();
+  
+  let stuffy = capturedStuffies.find(s => s.id === stuffyId);
+  if (!stuffy) return;
+  if (!stuffy.items) {
+    stuffy.items = [];
+  }
+  stuffy.items.push(item);
+  saveCapturedStuffies();
+  showAlert(`${item.id} purchased for ${item.cost} gold!`);
+  
+  // Trigger purchase animation
+  animatePurchase(item);
+  
+  // Optionally, update the details display to show the new purchased items:
+  showDetails(stuffyId);
+}
+
     
     /***** FULL COLLECTION MODAL *****/
     function updateFullCollection() {
