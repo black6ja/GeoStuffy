@@ -648,20 +648,24 @@
     }
     
     function showDetails(stuffyId) {
-      const stuffy = capturedStuffies.find(s => s.id === stuffyId);
-      if (!stuffy) return;
-      document.getElementById("detailName").innerText = stuffy.name;
-      document.getElementById("detailImage").src = stuffy.image;
-      document.getElementById("detailEats").innerText = `Eats: ${stuffy.eats || "Unknown"}`;
-      document.getElementById("detailFavColor").innerText = `Favorite Color: ${stuffy.favoriteColor || "Unknown"}`;
-      document.getElementById("detailFavActivity").innerText = `Loves: ${stuffy.favoriteActivity || "Unknown"}`;
-      document.getElementById("detailRarity").innerText = `Rarity: ${stuffy.rarity.name}`;
-      document.getElementById("detailGold").innerText = `Gold Value: ${stuffy.gold}`;
-      document.getElementById("detailsOverlay").style.display = "flex";
-      document.getElementById("closeDetails").onclick = function() {
-        document.getElementById("detailsOverlay").style.display = "none";
-      };
-    }
+  // Hide the full collection modal so the details overlay appears on top
+  document.getElementById("collectionModal").style.display = "none";
+  
+  const stuffy = capturedStuffies.find(s => s.id === stuffyId);
+  if (!stuffy) return;
+  document.getElementById("detailName").innerText = stuffy.name;
+  document.getElementById("detailImage").src = stuffy.image;
+  document.getElementById("detailEats").innerText = `Eats: ${stuffy.eats || "Unknown"}`;
+  document.getElementById("detailFavColor").innerText = `Favorite Color: ${stuffy.favoriteColor || "Unknown"}`;
+  document.getElementById("detailFavActivity").innerText = `Loves: ${stuffy.favoriteActivity || "Unknown"}`;
+  document.getElementById("detailRarity").innerText = `Rarity: ${stuffy.rarity.name}`;
+  document.getElementById("detailGold").innerText = `Gold Value: ${stuffy.gold}`;
+  document.getElementById("detailsOverlay").style.display = "flex";
+  document.getElementById("closeDetails").onclick = function() {
+    document.getElementById("detailsOverlay").style.display = "none";
+  };
+}
+
     
     /***** Full Collection Modal *****/
     function updateFullCollection() {
