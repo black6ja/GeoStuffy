@@ -637,10 +637,27 @@
       }, 100);
     }
     
+
     function saveCapturedStuffies() {
-  const savableStuffies = capturedStuffies.map(({ marker, ...stuffyData }) => stuffyData);
+  const savableStuffies = capturedStuffies.map(stuffy => {
+    return {
+      id: stuffy.id,
+      name: stuffy.name,
+      rarity: stuffy.rarity,
+      lat: stuffy.lat,
+      lng: stuffy.lng,
+      gold: stuffy.gold,
+      image: stuffy.image,
+      eats: stuffy.eats,
+      favoriteColor: stuffy.favoriteColor,
+      favoriteActivity: stuffy.favoriteActivity,
+      captured: stuffy.captured
+    };
+  });
   localStorage.setItem("capturedStuffies", JSON.stringify(savableStuffies));
 }
+
+
 
     /***** COLLECTION DISPLAY & DETAILS CARD *****/
     function updateStuffyCollection() {
