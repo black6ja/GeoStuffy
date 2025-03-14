@@ -18,7 +18,7 @@
       background: #f0f0f0;
     }
     #map { height: 70vh; width: 100%; }
-    
+
     /* Player Marker – Blinking Blue Dot */
     .blinking-circle {
       width: 12px;
@@ -34,14 +34,14 @@
       50% { opacity: 0.3; }
       100% { opacity: 1; }
     }
-    
+
     /* Interaction Circle */
     .interaction-circle {
       stroke: blue;
       fill: blue;
       fill-opacity: 0.2;
     }
-    
+
     /* Stuffed Animal Marker Styles */
     .stuffy-marker {
       position: absolute;
@@ -60,7 +60,7 @@
     .normal, .rare, .epic, .legendary {
       filter: none;
     }
-    
+
     /* Capture Overlay – Responsive */
     #captureOverlay {
       position: fixed;
@@ -93,16 +93,16 @@
       margin: 0 auto;
       display: block;
     }
-    #rollDisplay { 
-      font-size: 2.5em; 
-      margin: 20px 0; 
+    #rollDisplay {
+      font-size: 2.5em;
+      margin: 20px 0;
       background: #333;
       border-radius: 10px;
       padding: 5px;
       box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     }
     #neededRoll { font-size: 1.2em; margin-bottom: 10px; }
-    
+
     /* Capture Buttons */
     button {
       padding: 10px 20px;
@@ -114,26 +114,26 @@
       transition: transform 0.2s, box-shadow 0.2s;
     }
     button:active { transform: scale(0.95); }
-    #rollCaptureBtn { 
-      background-color: #4CAF50; 
-      color: #fff; 
-      font-weight: bold; 
+    #rollCaptureBtn {
+      background-color: #4CAF50;
+      color: #fff;
+      font-weight: bold;
       box-shadow: 0 3px 6px rgba(0,0,0,0.2);
     }
-    #rollCaptureBtn:hover { 
-      background-color: #45a049; 
+    #rollCaptureBtn:hover {
+      background-color: #45a049;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
-    #closeCapture { 
-      background-color: #f44336; 
-      color: #fff; 
+    #closeCapture {
+      background-color: #f44336;
+      color: #fff;
       box-shadow: 0 3px 6px rgba(0,0,0,0.2);
     }
-    #closeCapture:hover { 
-      background-color: #d32f2f; 
+    #closeCapture:hover {
+      background-color: #d32f2f;
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
-    
+
     /* Enhanced Capture Animations */
     .capture-success {
       animation: successAnimation 0.8s forwards;
@@ -177,7 +177,7 @@
       75% { transform: translate(-10px, 0); }
       100% { transform: translate(0, 0); }
     }
-    
+
     /* Collection Display */
     #collection {
       padding: 10px;
@@ -186,27 +186,26 @@
       text-align: center;
     }
     #collection h2 { margin-top: 0; }
-    /* Gold display added */
     #goldDisplay {
       font-size: 1.2em;
       margin-bottom: 10px;
     }
-    .stuffy-img { 
-      width: 50px; 
-      height: 50px; 
-      margin: 5px; 
-      border: 2px solid #ccc; 
-      border-radius: 5px; 
+    .stuffy-img {
+      width: 50px;
+      height: 50px;
+      margin: 5px;
+      border: 2px solid #ccc;
+      border-radius: 5px;
       object-fit: cover;
-      transition: transform 0.3s; 
+      transition: transform 0.3s;
       cursor: pointer;
       image-rendering: crisp-edges;
     }
-    .stuffy-img:hover { 
-      transform: scale(1.1); 
-      border-color: #4CAF50; 
+    .stuffy-img:hover {
+      transform: scale(1.1);
+      border-color: #4CAF50;
     }
-    
+
     /* Details Card Overlay for Captured Stuffies */
     #detailsOverlay {
       position: fixed;
@@ -229,6 +228,7 @@
       width: 300px;
       text-align: center;
       color: #333;
+      position: relative;
     }
     #detailsContent img {
       max-width: 150px;
@@ -236,6 +236,21 @@
       object-fit: contain;
       margin: 10px auto;
       display: block;
+    }
+    #detailItems {
+      margin-top: 10px;
+    }
+    .stuffy-item-img {
+      width: 40px;
+      height: 40px;
+      margin: 3px;
+      border-radius: 5px;
+      object-fit: cover;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .stuffy-item-img:hover {
+      transform: scale(1.1);
     }
     #closeDetails {
       margin-top: 10px;
@@ -274,20 +289,18 @@
     #openShopBtn:hover {
       background-color: #00BFFF;
     }
-    /* Greyscale for uncaptured stuffies in the collection */
     .uncaptured {
       filter: grayscale(100%);
     }
-    
+
     /* Shop Modal */
     #shopModal {
-      display: none;
+      display: none; 
       position: fixed;
       top: 0; left: 0;
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.8);
-      display: flex;
       align-items: center;
       justify-content: center;
       z-index: 8000;
@@ -306,6 +319,14 @@
       display: inline-block;
       margin: 10px;
       text-align: center;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      padding: 10px;
+      transition: transform 0.2s;
+    }
+    .shop-item:hover {
+      transform: scale(1.03);
     }
     .shop-item img {
       width: 80px;
@@ -321,11 +342,17 @@
       margin: 5px 0;
       font-size: 0.9em;
     }
+    .purchase-success {
+      animation: successAnimation 0.8s forwards;
+    }
+    .fail-purchase {
+      animation: shake 0.5s;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  
+
   <!-- Capture Overlay -->
   <div id="captureOverlay">
     <div id="captureContent">
@@ -341,7 +368,7 @@
       <button id="closeCapture">Cancel</button>
     </div>
   </div>
-  
+
   <!-- Details Card Overlay for Captured Stuffies -->
   <div id="detailsOverlay">
     <div id="detailsContent">
@@ -352,12 +379,14 @@
       <p id="detailFavActivity"></p>
       <p id="detailRarity"></p>
       <p id="detailGold"></p>
+      <!-- Display purchased items -->
+      <div id="detailItems"></div>
       <button id="sellStuffyBtn">Sell for Gold</button>
       <button id="openShopBtn">Shop</button>
       <button id="closeDetails">Close</button>
     </div>
   </div>
-  
+
   <!-- Shop Modal -->
   <div id="shopModal">
     <div id="shopContent">
@@ -366,7 +395,7 @@
       <button onclick="closeShopModal()" style="margin-top:10px; padding:5px 10px;">Close Shop</button>
     </div>
   </div>
-  
+
   <!-- Collection Display -->
   <div id="collection">
     <h2>Your Captured Stuffies</h2>
@@ -374,7 +403,7 @@
     <div id="collectionDisplay">No stuffed animals captured yet.</div>
     <button onclick="openCollectionModal()">View Full Collection</button>
   </div>
-  
+
   <!-- Full Collection Modal -->
   <div id="collectionModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; z-index:6000;">
     <div style="background:#fff; padding:20px; border-radius:10px; max-width:90vw; width:400px; max-height:80vh; overflow-y:auto;">
@@ -383,7 +412,7 @@
       <button onclick="closeCollectionModal()" style="margin-top:10px; padding:5px 10px;">Close</button>
     </div>
   </div>
-  
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
@@ -391,13 +420,13 @@
     let capturedStuffies = [];
     let activeStuffies = [];
     let allStuffies = []; // All stuffies from JSON
-    
+
     // Limit spawns to within one mile (1609 meters)
     const spawnRadiusLimit = 1609;
     const maxStuffies = 100;
     const respawnDelay = 10 * 60 * 1000; // 10 minutes
     let playerLat, playerLng;
-    
+
     // Player gold management
     let playerGold = Number(localStorage.getItem("playerGold")) || 0;
     function savePlayerGold() {
@@ -406,7 +435,7 @@
     function updateGoldDisplay() {
       document.getElementById("goldValue").innerText = playerGold;
     }
-    
+
     // Rarity levels (from JSON)
     const rarityLevels = {
       normal: { name: "Cuddly", gold: 10, successRate: 5, cssClass: "normal" },
@@ -414,7 +443,7 @@
       epic: { name: "Ethereal", gold: 100, successRate: 15, cssClass: "epic" },
       legendary: { name: "Celestial", gold: 500, successRate: 20, cssClass: "legendary" }
     };
-    
+
     // Fallback names if JSON fails
     const stuffyNames = [
       "Fluffy", "Snowball", "Coco", "Bella", "Muffin", "Peaches", "Pip", "Winnie", "Daisy", "Lucky",
@@ -423,7 +452,7 @@
       "Ginger", "Marley", "Rocky", "Sassy", "Olive", "Chico", "Luna", "Boots", "Peanut", "Cinnamon",
       "Milo", "Ruby", "Oreo", "Poppy", "Scout", "Willow", "Harley", "Nala", "Zeus", "Lola"
     ];
-    
+
     const imageMapping = {
       "Fluffy": "Subject.png",
       "Snowball": "Subject2.png",
@@ -476,108 +505,108 @@
       "Zeus": "Subject49.png",
       "Lola": "Subject50.png"
     };
-    
-    // Sample shop inventory (you can expand these arrays later)
+
+    // Shop inventory with images, costs, descriptions, and rarities
     const shopInventory = {
-  toys: [
-    {
-      id: 'toy1',
-      image: 'toy1.png',
-      cost: 15,
-      desc: 'A colorful plush ball.',
-      availableFor: ['normal', 'rare', 'epic', 'legendary']
-    },
-    {
-      id: 'toy2',
-      image: 'toy2.png',
-      cost: 25,
-      desc: 'A silly plush car.',
-      availableFor: ['normal', 'rare', 'epic', 'legendary']
-    },
-    {
-      id: 'toy3',
-      image: 'toy3.png',
-      cost: 40,
-      desc: 'A playful plush train.',
-      availableFor: ['rare', 'epic', 'legendary']
-    },
-    {
-      id: 'toy4',
-      image: 'toy4.png',
-      cost: 50,
-      desc: 'A friendly plush airplane.',
-      availableFor: ['epic', 'legendary']
-    },
-    {
-      id: 'toy5',
-      image: 'toy5.png',
-      cost: 60,
-      desc: 'A classic rocking horse plush.',
-      availableFor: ['legendary']
-    }
-  ],
-  candy: [
-    {
-      id: 'candy1',
-      image: 'candy1.png',
-      cost: 10,
-      desc: 'A colorful lollipop plush!',
-      availableFor: ['normal', 'rare', 'epic', 'legendary']
-    },
-    {
-      id: 'candy2',
-      image: 'candy2.png',
-      cost: 15,
-      desc: 'A soft candy plush treat!',
-      availableFor: ['normal', 'rare', 'epic', 'legendary']
-    },
-    {
-      id: 'candy3',
-      image: 'candy3.png',
-      cost: 20,
-      desc: 'A sweet puffy cube plush!',
-      availableFor: ['epic', 'legendary']
-    }
-  ],
-  houses: [
-    {
-      id: 'house1',
-      image: 'house1.png',
-      cost: 100,
-      desc: 'A cozy pastel cottage.',
-      availableFor: ['normal', 'rare', 'epic', 'legendary']
-    },
-    {
-      id: 'house2',
-      image: 'house2.png',
-      cost: 150,
-      desc: 'A charming mushroom house.',
-      availableFor: ['rare', 'epic', 'legendary']
-    },
-    {
-      id: 'house3',
-      image: 'house3.png',
-      cost: 200,
-      desc: 'A leafy woodland abode.',
-      availableFor: ['epic', 'legendary']
-    },
-    {
-      id: 'house4',
-      image: 'house4.png',
-      cost: 300,
-      desc: 'A whimsical fairytale castle!',
-      availableFor: ['legendary']
-    },
-    {
-      id: 'house5',
-      image: 'house5.png',
-      cost: 400,
-      desc: 'A cozy igloo for chilly stuffies.',
-      availableFor: ['epic', 'legendary']
-    }
-  ]
-};
-    
+      toys: [
+        {
+          id: 'toy1',
+          image: 'toy1.png',
+          cost: 15,
+          desc: 'A colorful plush ball.',
+          availableFor: ['normal', 'rare', 'epic', 'legendary']
+        },
+        {
+          id: 'toy2',
+          image: 'toy2.png',
+          cost: 25,
+          desc: 'A silly plush car.',
+          availableFor: ['normal', 'rare', 'epic', 'legendary']
+        },
+        {
+          id: 'toy3',
+          image: 'toy3.png',
+          cost: 40,
+          desc: 'A playful plush train.',
+          availableFor: ['rare', 'epic', 'legendary']
+        },
+        {
+          id: 'toy4',
+          image: 'toy4.png',
+          cost: 50,
+          desc: 'A friendly plush airplane.',
+          availableFor: ['epic', 'legendary']
+        },
+        {
+          id: 'toy5',
+          image: 'toy5.png',
+          cost: 60,
+          desc: 'A classic rocking horse plush.',
+          availableFor: ['legendary']
+        }
+      ],
+      candy: [
+        {
+          id: 'candy1',
+          image: 'candy1.png',
+          cost: 10,
+          desc: 'A colorful lollipop plush!',
+          availableFor: ['normal', 'rare', 'epic', 'legendary']
+        },
+        {
+          id: 'candy2',
+          image: 'candy2.png',
+          cost: 15,
+          desc: 'A soft candy plush treat!',
+          availableFor: ['normal', 'rare', 'epic', 'legendary']
+        },
+        {
+          id: 'candy3',
+          image: 'candy3.png',
+          cost: 20,
+          desc: 'A sweet puffy cube plush!',
+          availableFor: ['epic', 'legendary']
+        }
+      ],
+      houses: [
+        {
+          id: 'house1',
+          image: 'house1.png',
+          cost: 100,
+          desc: 'A cozy pastel cottage.',
+          availableFor: ['normal', 'rare', 'epic', 'legendary']
+        },
+        {
+          id: 'house2',
+          image: 'house2.png',
+          cost: 150,
+          desc: 'A charming mushroom house.',
+          availableFor: ['rare', 'epic', 'legendary']
+        },
+        {
+          id: 'house3',
+          image: 'house3.png',
+          cost: 200,
+          desc: 'A leafy woodland abode.',
+          availableFor: ['epic', 'legendary']
+        },
+        {
+          id: 'house4',
+          image: 'house4.png',
+          cost: 300,
+          desc: 'A whimsical fairytale castle!',
+          availableFor: ['legendary']
+        },
+        {
+          id: 'house5',
+          image: 'house5.png',
+          cost: 400,
+          desc: 'A cozy igloo for chilly stuffies.',
+          availableFor: ['epic', 'legendary']
+        }
+      ]
+    };
+
     /***** LOAD STUFFY DETAILS FROM JSON *****/
     fetch('stuffyDetails.json')
       .then(response => response.json())
@@ -588,7 +617,7 @@
         updateFullCollection();
       })
       .catch(error => console.error("Error loading stuffyDetails.json:", error));
-    
+
     /***** MAP & GEOPOSITIONING SETUP *****/
     const defaultLat = 51.505, defaultLng = -0.09;
     var map = L.map('map').setView([defaultLat, defaultLng], 15);
@@ -596,7 +625,7 @@
       maxZoom: 19,
       attribution: '© OpenStreetMap'
     }).addTo(map);
-    
+
     // Player Marker – Blinking Dot
     var playerMarker = L.marker([defaultLat, defaultLng], {
       icon: L.divIcon({
@@ -606,14 +635,14 @@
         iconAnchor: [6, 6]
       })
     }).addTo(map);
-    
+
     // Interaction Circle (230 m ≈ 250 yards)
     var interactionRadius = 230;
     var interactionCircle = L.circle(playerMarker.getLatLng(), {
       radius: interactionRadius,
       className: 'interaction-circle'
     }).addTo(map);
-    
+
     // Update player's location
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(function(position) {
@@ -627,7 +656,7 @@
         console.error("Geolocation error: " + error.message);
       }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 5000 });
     }
-    
+
     /***** SPAWNING STUFFIES NEARBY (within 1 mile) *****/
     function spawnStuffies() {
       if (allStuffies.length === 0) return;
@@ -655,15 +684,16 @@
         activeStuffies.push(stuffy);
       }
     }
-    
+
     // Always spawn within spawnRadiusLimit (1 mile)
     function randomPointNearPlayer() {
       let r = Math.random() * (spawnRadiusLimit / 111320);
       let theta = Math.random() * 2 * Math.PI;
       return { lat: playerLat + r * Math.cos(theta), lng: playerLng + r * Math.sin(theta) };
     }
-    
+
     function createStuffyMarker(stuffy) {
+      // Create and add the marker to the map
       let marker = L.marker([stuffy.lat, stuffy.lng], {
         icon: L.divIcon({
           className: `stuffy-marker ${stuffy.rarity.cssClass}`,
@@ -672,6 +702,8 @@
           iconAnchor: [17, 17]
         })
       }).addTo(map);
+
+      // Set up a click handler for the marker
       marker.on('click', () => {
         let distance = L.latLng(playerLat, playerLng).distanceTo(L.latLng(stuffy.lat, stuffy.lng));
         if (distance <= interactionRadius) {
@@ -680,10 +712,13 @@
           showAlert("Too far away! Move closer to interact.");
         }
       });
+
+      // Attach the marker to the stuffy object for future reference
       stuffy.marker = marker;
     }
-    
-    /***** UPDATE ACTIVE STUFFIES WHEN PLAYER MOVES (only within 1 mile) *****/
+
+    // -------------------------------------------------
+    // Function to update active stuffies when player moves
     function updateActiveStuffies() {
       activeStuffies = activeStuffies.filter(stuffy => {
         let distance = L.latLng(playerLat, playerLng).distanceTo(L.latLng(stuffy.lat, stuffy.lng));
@@ -695,31 +730,9 @@
       });
       spawnStuffies();
     }
-    
-    /***** CAPTURE SYSTEM *****/
-    const captureOverlay = document.getElementById("captureOverlay");
-    const stuffyNameEl = document.getElementById("stuffyName");
-    const neededRollEl = document.getElementById("neededRoll");
-    const stuffyGoldEl = document.getElementById("stuffyGold");
-    const stuffyEatsEl = document.getElementById("stuffyEats");
-    const stuffyFavColorEl = document.getElementById("stuffyFavColor");
-    const stuffyFavActivityEl = document.getElementById("stuffyFavActivity");
-    const stuffyImageEl = document.getElementById("stuffyImage");
-    const rollDisplayEl = document.getElementById("rollDisplay");
-    const rollCaptureBtn = document.getElementById("rollCaptureBtn");
-    const closeCaptureBtn = document.getElementById("closeCapture");
-    
-    // Load captured stuffies and gold on page load
-    window.addEventListener("load", function() {
-      const savedStuffies = localStorage.getItem("capturedStuffies");
-      if (savedStuffies) {
-        capturedStuffies = JSON.parse(savedStuffies);
-        updateStuffyCollection();
-        updateFullCollection();
-      }
-      updateGoldDisplay();
-    });
-    
+
+    // -------------------------------------------------
+    // Capture System: handles starting a capture when a marker is clicked
     function startCapture(stuffy, marker) {
       captureOverlay.style.display = "flex";
       stuffyNameEl.innerText = stuffy.name;
@@ -732,6 +745,7 @@
       stuffyImageEl.classList.remove("capture-success");
       rollDisplayEl.innerText = "--";
       
+      // Set the capture card border based on rarity
       const captureContent = document.getElementById("captureContent");
       if (stuffy.rarity.cssClass === "rare") {
         captureContent.style.borderColor = "purple";
@@ -751,6 +765,7 @@
         animateWheelRoll(2000, (finalRoll) => {
           rollDisplayEl.innerText = finalRoll;
           if (finalRoll >= stuffy.rarity.successRate) {
+            // Capture success animation and confetti
             stuffyImageEl.classList.add("capture-success");
             let capturedOverlay = document.createElement("div");
             capturedOverlay.className = "captured-text";
@@ -778,6 +793,7 @@
               stuffyImageEl.classList.remove("capture-success");
             }, 1000);
           } else {
+            // Capture failure animation (shake)
             captureOverlay.classList.add("shake");
             let failOverlay = document.createElement("div");
             failOverlay.className = "fail-overlay";
@@ -805,7 +821,9 @@
         rollCaptureBtn.disabled = false;
       };
     }
-    
+
+    // -------------------------------------------------
+    // Function to animate the wheel roll
     function animateWheelRoll(duration, callback) {
       let startTime = Date.now();
       let interval = setInterval(() => {
@@ -817,7 +835,9 @@
         }
       }, 100);
     }
-    
+
+    // -------------------------------------------------
+    // Save captured stuffies to localStorage (excluding circular marker objects)
     function saveCapturedStuffies() {
       const savableStuffies = capturedStuffies.map(stuffy => ({
         id: stuffy.id,
@@ -830,12 +850,14 @@
         eats: stuffy.eats,
         favoriteColor: stuffy.favoriteColor,
         favoriteActivity: stuffy.favoriteActivity,
-        captured: stuffy.captured
+        captured: stuffy.captured,
+        items: stuffy.items || []
       }));
       localStorage.setItem("capturedStuffies", JSON.stringify(savableStuffies));
     }
-    
-    /***** COLLECTION DISPLAY & DETAILS CARD *****/
+
+    // -------------------------------------------------
+    // Functions to update the collection display and show full collection
     function updateStuffyCollection() {
       let collectionDiv = document.getElementById("collectionDisplay");
       if (capturedStuffies.length === 0) {
@@ -846,10 +868,35 @@
         ).join('');
       }
     }
-    
+
+    function updateFullCollection() {
+      const container = document.getElementById("fullCollectionDisplay");
+      container.innerHTML = allStuffies.map(detail => {
+        let capturedObj = capturedStuffies.find(s => s.name.includes(detail.name));
+        let imgClass = capturedObj ? "" : "uncaptured";
+        let onclick = capturedObj ? `onclick="showDetails('${capturedObj.id}')"` : "";
+        return `<div style="margin:5px;">
+          <img src="${imageMapping[detail.name] || 'default.png'}" alt="${detail.name}" class="stuffy-img ${imgClass}" ${onclick} title="${detail.name}">
+        </div>`;
+      }).join('');
+    }
+
+    function openCollectionModal() {
+      document.getElementById("collectionModal").style.display = "flex";
+    }
+
+    function closeCollectionModal() {
+      document.getElementById("collectionModal").style.display = "none";
+    }
+
+    function showAlert(message) {
+      console.log(message);
+    }
+
+    // -------------------------------------------------
+    // Function to show details for a captured stuffy
     function showDetails(stuffyId) {
       document.getElementById("collectionModal").style.display = "none";
-      
       const stuffy = capturedStuffies.find(s => s.id === stuffyId);
       if (!stuffy) return;
       document.getElementById("detailName").innerText = stuffy.name;
@@ -859,26 +906,34 @@
       document.getElementById("detailFavActivity").innerText = `Loves: ${stuffy.favoriteActivity || "Unknown"}`;
       document.getElementById("detailRarity").innerText = `Rarity: ${stuffy.rarity.name}`;
       document.getElementById("detailGold").innerText = `Gold Value: ${stuffy.gold}`;
-      
+
+      // Display purchased items for this stuffy
+      const detailItems = document.getElementById("detailItems");
+      if (!stuffy.items || stuffy.items.length === 0) {
+        detailItems.innerHTML = "<p>No items purchased yet.</p>";
+      } else {
+        detailItems.innerHTML = stuffy.items.map(item => `
+          <img src="${item.image}" alt="${item.id}" title="${item.desc}" class="stuffy-item-img">
+        `).join("");
+      }
+
       // Show Sell and Shop buttons
       const sellBtn = document.getElementById("sellStuffyBtn");
       sellBtn.style.display = "inline-block";
-      sellBtn.onclick = function() {
-        sellStuffy(stuffyId);
-      };
+      sellBtn.onclick = function() { sellStuffy(stuffyId); };
+
       const shopBtn = document.getElementById("openShopBtn");
       shopBtn.style.display = "inline-block";
-      shopBtn.onclick = function() {
-        openShop(stuffy);
-      };
-      
+      shopBtn.onclick = function() { openShop(stuffy); };
+
       document.getElementById("detailsOverlay").style.display = "flex";
       document.getElementById("closeDetails").onclick = function() {
         document.getElementById("detailsOverlay").style.display = "none";
       };
     }
-    
-    /***** Sell Functionality *****/
+
+    // -------------------------------------------------
+    // Sell Functionality: Remove a stuffy and add its gold value
     function sellStuffy(stuffyId) {
       const index = capturedStuffies.findIndex(s => s.id === stuffyId);
       if (index === -1) return;
@@ -891,27 +946,27 @@
       updateFullCollection();
       updateGoldDisplay();
       document.getElementById("detailsOverlay").style.display = "none";
-      // (No alert, as requested)
     }
-    
-    /***** SHOP FUNCTIONALITY *****/
+
+    // -------------------------------------------------
+    // Shop Functionality
     function openShop(stuffy) {
-      // Open the shop modal and filter items based on this stuffy's rarity (using cssClass)
+      if (!stuffy || !stuffy.captured) return;
       const shopModal = document.getElementById("shopModal");
       const shopTitle = document.getElementById("shopTitle");
       shopTitle.innerText = `${stuffy.name}'s Shop`;
-      
-      // We'll display items in three categories: toys, candy, houses.
+
       let inventoryHTML = "";
+      const stuffyRarityClass = stuffy.rarity.cssClass;
       for (let category in shopInventory) {
-        // Filter items available for this stuffy's rarity
-        const items = shopInventory[category].filter(item => item.availableFor.includes(stuffy.rarity.cssClass));
+        const items = shopInventory[category].filter(item => item.availableFor.includes(stuffyRarityClass));
         if (items.length) {
           inventoryHTML += `<h3>${category.charAt(0).toUpperCase() + category.slice(1)}</h3><div>`;
           items.forEach(item => {
             inventoryHTML += `
               <div class="shop-item">
-                <img src="${item.image}" alt="${item.id}" onclick="purchaseItem('${item.id}', '${category}', '${stuffy.id}')">
+                <img src="${item.image}" alt="${item.id}" onclick="purchaseItem('${item.id}', '${category}', '${stuffy.id}', event)">
+                <p>${item.desc}</p>
                 <p>Cost: ${item.cost}</p>
               </div>
             `;
@@ -919,40 +974,44 @@
           inventoryHTML += `</div>`;
         }
       }
+      if (!inventoryHTML) {
+        inventoryHTML = "<p>No items available for this stuffy’s rarity.</p>";
+      }
       document.getElementById("shopInventoryDisplay").innerHTML = inventoryHTML;
       shopModal.style.display = "flex";
     }
-    
+
     function closeShopModal() {
       document.getElementById("shopModal").style.display = "none";
     }
-    
+
     // Purchase an item from the shop for a specific stuffy
-    function purchaseItem(itemId, category, stuffyId) {
-      // Find the item in the shopInventory
+    function purchaseItem(itemId, category, stuffyId, evt) {
       let item = shopInventory[category].find(it => it.id === itemId);
       if (!item) return;
+      const itemImg = evt.target;
       if (playerGold < item.cost) {
-        showAlert("Not enough gold!");
+        itemImg.classList.add("fail-purchase");
+        setTimeout(() => { itemImg.classList.remove("fail-purchase"); }, 1000);
         return;
       }
-      // Deduct gold
       playerGold -= item.cost;
       savePlayerGold();
       updateGoldDisplay();
-      // Add the item to the stuffy's personal inventory (initialize if needed)
       let stuffy = capturedStuffies.find(s => s.id === stuffyId);
       if (!stuffy) return;
-      if (!stuffy.items) {
-        stuffy.items = [];
-      }
+      if (!stuffy.items) { stuffy.items = []; }
       stuffy.items.push(item);
       saveCapturedStuffies();
-      showAlert(`${item.id} purchased for ${item.cost} gold!`);
-      // Optionally, update UI to reflect purchase here.
+      // Purchase success animation and confetti
+      itemImg.classList.add("purchase-success");
+      confetti({ particleCount: 60, spread: 60, origin: { y: 0.6 } });
+      setTimeout(() => { itemImg.classList.remove("purchase-success"); }, 800);
+      showAlert(`${item.desc} purchased for ${item.cost} gold!`);
     }
-    
-    /***** FULL COLLECTION MODAL *****/
+
+    // -------------------------------------------------
+    // Full Collection Modal Functions
     function updateFullCollection() {
       const container = document.getElementById("fullCollectionDisplay");
       container.innerHTML = allStuffies.map(detail => {
@@ -964,20 +1023,21 @@
         </div>`;
       }).join('');
     }
-    
+
     function openCollectionModal() {
       document.getElementById("collectionModal").style.display = "flex";
     }
-    
+
     function closeCollectionModal() {
       document.getElementById("collectionModal").style.display = "none";
     }
-    
+
     function showAlert(message) {
       console.log(message);
     }
-    
-    /***** INITIALIZATION *****/
+
+    // -------------------------------------------------
+    // Initialization: Get player's position and start spawns
     navigator.geolocation.getCurrentPosition(function(position) {
       playerLat = position.coords.latitude;
       playerLng = position.coords.longitude;
@@ -991,8 +1051,9 @@
       playerLng = defaultLng;
       spawnStuffies();
     });
-    
-    /***** HOME BASE STORAGE (Transfer Captured Stuffies) *****/
+
+    // -------------------------------------------------
+    // Home Base Storage Functionality
     function transferToHome() {
       if (capturedStuffies.length === 0) {
         showAlert("No stuffies to transfer!");
@@ -1005,7 +1066,7 @@
       updateStuffyCollection();
       showAlert("All stuffies have been transferred to your home!");
     }
-    
+
     updateStuffyCollection();
   </script>
 </body>
