@@ -1002,18 +1002,19 @@ function animatePurchaseFail() {
   let item = shopInventory[category].find(it => it.id === itemId);
   if (!item) return;
   
-  // If not enough gold, trigger the failure animation
+  // Check if the player has enough gold; if not, play the failure animation
   if (playerGold < item.cost) {
     animatePurchaseFail();
     showAlert("Not enough gold!");
     return;
   }
   
-  // Deduct gold and update display
+  // Deduct gold and update the display
   playerGold -= item.cost;
   savePlayerGold();
   updateGoldDisplay();
   
+  // Find the stuffed animal and add the purchased item to its inventory
   let stuffy = capturedStuffies.find(s => s.id === stuffyId);
   if (!stuffy) return;
   if (!stuffy.items) {
@@ -1023,12 +1024,15 @@ function animatePurchaseFail() {
   saveCapturedStuffies();
   showAlert(`${item.id} purchased for ${item.cost} gold!`);
   
-  // Trigger purchase success animation
-  animatePurchaseSuccess(item);
-  
-  // Refresh the details display to show the new purchased item(s)
+  // Refresh the details display so that the target element (detailImage) is visible
   showDetails(stuffyId);
+  
+  // Trigger the success animation after a short delay to ensure the details overlay is open
+  setTimeout(() => {
+    animatePurchaseSuccess(item);
+  }, 100);
 }
+
 
 
     
