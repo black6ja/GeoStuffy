@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch GeoStuffy Website",
+            "url": "https://black6ja.github.io/GeoStuffy/",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Local index.html",
+            "file": "${workspaceFolder}/index.html"
+        }
+    ]
+}
