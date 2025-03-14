@@ -450,6 +450,7 @@
   <!-- Audio Elements for Purchase Feedback -->
   <audio id="successAudio" src="success.mp3"></audio>
   <audio id="failAudio" src="fail.mp3"></audio>
+  <audio id="goldSale" src="goldSale.mp3"></audio>
   
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -947,22 +948,27 @@
     }
     
     function processSellStuffy(stuffy, qty) {
-      let goldGained = qty * stuffy.gold;
-      playerGold += goldGained;
-      if(stuffy.count > qty){
-        stuffy.count -= qty;
-      } else {
-        let index = capturedStuffies.findIndex(s => s.id === stuffy.id);
-        if(index !== -1) capturedStuffies.splice(index, 1);
-      }
-      saveCapturedStuffies();
-      savePlayerGold();
-      updateStuffyCollection();
-      updateFullCollection();
-      updateGoldDisplay();
-      document.getElementById("detailsOverlay").style.display = "none";
-      showAlert(`Sold ${qty} of ${stuffy.name} for ${goldGained} gold!`);
-    }
+  let goldGained = qty * stuffy.gold;
+  playerGold += goldGained;
+  
+  // Play the gold sale sound
+  document.getElementById("goldSale").play();
+  
+  if(stuffy.count > qty){
+    stuffy.count -= qty;
+  } else {
+    let index = capturedStuffies.findIndex(s => s.id === stuffy.id);
+    if(index !== -1) capturedStuffies.splice(index, 1);
+  }
+  saveCapturedStuffies();
+  savePlayerGold();
+  updateStuffyCollection();
+  updateFullCollection();
+  updateGoldDisplay();
+  document.getElementById("detailsOverlay").style.display = "none";
+  //showAlert(`Sold ${qty} of ${stuffy.name} for ${goldGained} gold!`);
+}
+
     
     function processSellItem(item, qty) {
       // Implement similar logic for selling shop items.
