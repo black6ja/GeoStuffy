@@ -915,6 +915,38 @@ const shopInventory = {
   };
 }
 
+function animatePurchaseSuccess(item) {
+  const detailImageEl = document.getElementById("detailImage");
+  // Ensure the details overlay is visible so the animation can be seen.
+  if (detailImageEl) {
+    detailImageEl.classList.add("capture-success");
+  }
+  
+  // Trigger a confetti effect (using the canvas-confetti library)
+  confetti({
+    particleCount: 50,
+    spread: 60,
+    origin: { y: 0.5 }
+  });
+  
+  // Remove the animation class after a short delay
+  setTimeout(() => {
+    if (detailImageEl) {
+      detailImageEl.classList.remove("capture-success");
+    }
+  }, 1000);
+}
+
+function animatePurchaseFail() {
+  const shopContent = document.getElementById("shopContent");
+  if (shopContent) {
+    shopContent.classList.add("shake");
+    setTimeout(() => {
+      shopContent.classList.remove("shake");
+    }, 500);
+  }
+}
+
     
     /***** Sell Functionality *****/
     function sellStuffy(stuffyId) {
@@ -969,10 +1001,15 @@ const shopInventory = {
     function purchaseItem(itemId, category, stuffyId) {
   let item = shopInventory[category].find(it => it.id === itemId);
   if (!item) return;
+  
+  // If not enough gold, trigger the failure animation
   if (playerGold < item.cost) {
+    animatePurchaseFail();
     showAlert("Not enough gold!");
     return;
   }
+  
+  // Deduct gold and update display
   playerGold -= item.cost;
   savePlayerGold();
   updateGoldDisplay();
@@ -986,12 +1023,13 @@ const shopInventory = {
   saveCapturedStuffies();
   showAlert(`${item.id} purchased for ${item.cost} gold!`);
   
-  // Trigger purchase animation
-  animatePurchase(item);
+  // Trigger purchase success animation
+  animatePurchaseSuccess(item);
   
-  // Optionally, update the details display to show the new purchased items:
+  // Refresh the details display to show the new purchased item(s)
   showDetails(stuffyId);
 }
+
 
     
     /***** FULL COLLECTION MODAL *****/
