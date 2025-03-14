@@ -58,21 +58,17 @@
     }
     /* Rarity visual effects with glowing backgrounds */
     .normal { 
-      filter: brightness(1); 
-      box-shadow: 0 0 8px rgba(0, 0, 255, 0.7);
-    }
-    .rare { 
-      filter: brightness(1.2) hue-rotate(220deg); 
-      box-shadow: 0 0 8px rgba(128, 0, 128, 0.7);
-    }
-    .epic { 
-      filter: brightness(1.3) hue-rotate(270deg); 
-      box-shadow: 0 0 8px rgba(255, 0, 255, 0.7);
-    }
-    .legendary { 
-      filter: brightness(1.5) hue-rotate(40deg) drop-shadow(0px 0px 6px gold); 
-      box-shadow: 0 0 10px rgba(255, 215, 0, 0.9);
-    }
+  filter: brightness(1) drop-shadow(0 0 4px blue); 
+}
+.rare { 
+  filter: brightness(1.1) drop-shadow(0 0 4px purple); 
+}
+.epic { 
+  filter: brightness(1.2) drop-shadow(0 0 4px hotpink); 
+}
+.legendary { 
+  filter: brightness(1.3) drop-shadow(0 0 4px gold); 
+}
     
     /* Capture Overlay – Responsive */
     #captureOverlay {
@@ -202,16 +198,20 @@
     }
     #collection h2 { margin-top: 0; }
     .stuffy-img { 
-      width: 50px; 
-      height: 50px; 
-      margin: 5px; 
-      border: 2px solid #ccc; 
-      border-radius: 5px; 
-      object-fit: cover;
-      transition: transform 0.3s; 
-      cursor: pointer;
-    }
-    .stuffy-img:hover { transform: scale(1.1); border-color: #4CAF50; }
+  width: 50px; 
+  height: 50px; 
+  margin: 5px; 
+  border: 2px solid #ccc; 
+  border-radius: 5px; 
+  object-fit: cover;
+  transition: transform 0.3s; 
+  cursor: pointer;
+  image-rendering: crisp-edges;
+}
+.stuffy-img:hover { 
+  transform: scale(1.1); 
+  border-color: #4CAF50; 
+}
     
     /* Details Card Overlay for Captured Stuffies */
     #detailsOverlay {
@@ -254,8 +254,8 @@
     }
     /* Greyscale for uncaptured stuffies in the collection */
     .uncaptured {
-      filter: grayscale(100%);
-    }
+  filter: grayscale(100%);
+}
   </style>
 </head>
 <body>
@@ -337,6 +337,60 @@
       "Milo", "Ruby", "Oreo", "Poppy", "Scout", "Willow", "Harley", "Nala", "Zeus", "Lola"
     ];
     
+    const imageMapping = {
+  "Fluffy": "Subject.png",
+  "Snowball": "Subject2.png",
+  "Coco": "Subject3.png",
+  "Bella": "Subject4.png",
+  "Muffin": "Subject5.png",
+  "Peaches": "Subject6.png",
+  "Pip": "Subject7.png",
+  "Winnie": "Subject8.png",
+  "Daisy": "Subject9.png",
+  "Lucky": "Subject10.png",
+  "Biscuit": "Subject11.png",
+  "Cupcake": "Subject12.png",
+  "Sunny": "Subject13.png",
+  "Buddy": "Subject14.png",
+  "Pumpkin": "Subject15.png",
+  "Gizmo": "Subject16.png",
+  "Cookie": "Subject17.png",
+  "Bubbles": "Subject18.png",
+  "Fifi": "Subject19.png",
+  "Teddy": "Subject20.png",
+  "Mittens": "Subject21.png",
+  "Shadow": "Subject22.png",
+  "Smokey": "Subject23.png",
+  "Pepper": "Subject24.png",
+  "Simba": "Subject25.png",
+  "Mocha": "Subject26.png",
+  "Rusty": "Subject27.png",
+  "Ziggy": "Subject28.png",
+  "Patches": "Subject29.png",
+  "Blue": "Subject30.png",
+  "Ginger": "Subject31.png",
+  "Marley": "Subject32.png",
+  "Rocky": "Subject33.png",
+  "Sassy": "Subject34.png",
+  "Olive": "Subject35.png",
+  "Chico": "Subject36.png",
+  "Luna": "Subject37.png",
+  "Boots": "Subject38.png",
+  "Peanut": "Subject39.png",
+  "Cinnamon": "Subject40.png",
+  "Milo": "Subject41.png",
+  "Ruby": "Subject42.png",
+  "Oreo": "Subject43.png",
+  "Poppy": "Subject44.png",
+  "Scout": "Subject45.png",
+  "Willow": "Subject46.png",
+  "Harley": "Subject47.png",
+  "Nala": "Subject48.png",
+  "Zeus": "Subject49.png",
+  "Lola": "Subject50.png"
+};
+
+
     /***** LOAD STUFFY DETAILS FROM JSON *****/
     fetch('stuffyDetails.json')
       .then(response => response.json())
@@ -389,33 +443,36 @@
     
     /***** SPAWNING STUFFIES NEARBY *****/
     function spawnStuffies() {
-      if (allStuffies.length === 0) return;
-      // Spawn until we reach maxStuffies
-      while (activeStuffies.length < maxStuffies) {
-        // For the first 50, spawn within inner (1 mile); then in annulus (1-3 miles)
-        let spawnWithinInner = activeStuffies.length < 50;
-        let point = randomPointNearPlayer(spawnWithinInner);
-        let detail = allStuffies[Math.floor(Math.random() * allStuffies.length)];
-        // Use fixed rarity from JSON if provided, else fallback to normal
-        let rarity = rarityLevels[detail.rarity] || rarityLevels.normal;
-        let name = `${rarity.name} ${detail.name}`;
-        let stuffy = {
-          id: `stuffy_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-          name: name,
-          rarity: rarity,
-          lat: point.lat,
-          lng: point.lng,
-          gold: rarity.gold,
-          image: `Subject${(Math.floor(Math.random() * 50) + 1)}.png`,
-          eats: detail.eats,
-          favoriteColor: detail.favoriteColor,
-          favoriteActivity: detail.favoriteActivity,
-          captured: false
-        };
-        createStuffyMarker(stuffy);
-        activeStuffies.push(stuffy);
-      }
-    }
+    if (allStuffies.length === 0) return;
+    // Spawn until we reach maxStuffies
+    while (activeStuffies.length < maxStuffies) {
+      // For the first 50, spawn within inner (1 mile); then in annulus (1-3 miles)
+      let spawnWithinInner = activeStuffies.length < 50;
+      let point = randomPointNearPlayer(spawnWithinInner);
+      let detail = allStuffies[Math.floor(Math.random() * allStuffies.length)];
+      // Use fixed rarity from JSON if provided, else fallback to normal
+      let rarity = rarityLevels[detail.rarity] || rarityLevels.normal;
+      // Use the imageMapping to get the specific Subject image based on the name from JSON
+      let image = imageMapping[detail.name] || "default.png";
+      let name = `${rarity.name} ${detail.name}`;
+      let stuffy = {
+        id: `stuffy_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+        name: name,
+        rarity: rarity,
+        lat: point.lat,
+        lng: point.lng,
+        gold: rarity.gold,
+        image: image,
+        eats: detail.eats,
+        favoriteColor: detail.favoriteColor,
+        favoriteActivity: detail.favoriteActivity,
+        captured: false
+      };
+      createStuffyMarker(stuffy);
+      activeStuffies.push(stuffy);
+  }
+}
+
     
     function randomPointNearPlayer(inner) {
       // inner: true => point within 1 mile, false => point between 1 and 3 miles
@@ -507,7 +564,7 @@
               origin: { y: 0.6 }
             });
             setTimeout(() => {
-              showAlert(`Captured ${stuffy.name} (Roll: ${finalRoll})!`);
+              /*showAlert(`Captured ${stuffy.name} (Roll: ${finalRoll})!`);*/
               capturedStuffies.push(stuffy);
               stuffy.captured = true;
               updateStuffyCollection();
@@ -530,7 +587,7 @@
             failOverlay.innerText = "❌ Failed to Capture!";
             document.getElementById("captureContent").appendChild(failOverlay);
             setTimeout(() => {
-              showAlert(`Capture failed (Roll: ${finalRoll})!`);
+              /*showAlert(`Capture failed (Roll: ${finalRoll})!`);*/
               map.removeLayer(marker);
               activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
               updateFullCollection();
@@ -594,18 +651,19 @@
     
     /***** Full Collection Modal *****/
     function updateFullCollection() {
-      const container = document.getElementById("fullCollectionDisplay");
-      // Iterate over all 50 unique stuffies from JSON
-      container.innerHTML = allStuffies.map(detail => {
-        // Check if any captured stuffy matches this JSON detail (based on name)
-        let capturedObj = capturedStuffies.find(s => s.name.includes(detail.name));
-        let imgClass = capturedObj ? "" : "uncaptured";
-        let onclick = capturedObj ? `onclick="showDetails('${capturedObj.id}')"` : "";
-        return `<div style="margin:5px;">
-          <img src="Subject${(Math.floor(Math.random() * 50) + 1)}.png" alt="${detail.name}" class="stuffy-img ${imgClass}" ${onclick} title="${detail.name}">
-        </div>`;
-      }).join('');
-    }
+  const container = document.getElementById("fullCollectionDisplay");
+  // Iterate over all 50 unique stuffies from JSON
+  container.innerHTML = allStuffies.map(detail => {
+    // Check if a captured stuffy matches this JSON detail (based on name)
+    let capturedObj = capturedStuffies.find(s => s.name.includes(detail.name));
+    let imgClass = capturedObj ? "" : "uncaptured";
+    let onclick = capturedObj ? `onclick="showDetails('${capturedObj.id}')"` : "";
+    return `<div style="margin:5px;">
+      <img src="${imageMapping[detail.name] || 'default.png'}" alt="${detail.name}" class="stuffy-img ${imgClass}" ${onclick} title="${detail.name}">
+    </div>`;
+  }).join('');
+}
+
     
     function openCollectionModal() {
       document.getElementById("collectionModal").style.display = "flex";
