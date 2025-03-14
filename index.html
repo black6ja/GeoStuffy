@@ -207,6 +207,23 @@
       border-color: #4CAF50; 
     }
     
+    /* Collection Item container for duplicate count */
+    .collection-item {
+      position: relative;
+      display: inline-block;
+      margin: 5px;
+    }
+    .multiplier {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 2px 4px;
+      font-size: 0.8em;
+      border-radius: 3px;
+    }
+    
     /* Details Card Overlay for Captured Stuffies */
     #detailsOverlay {
       position: fixed;
@@ -725,7 +742,8 @@
           eats: detail.eats,
           favoriteColor: detail.favoriteColor,
           favoriteActivity: detail.favoriteActivity,
-          captured: false
+          captured: false,
+          count: 1  // default count on capture
         };
         createStuffyMarker(stuffy);
         activeStuffies.push(stuffy);
@@ -828,17 +846,24 @@
           rollDisplayEl.innerText = finalRoll;
           if (finalRoll >= stuffy.rarity.successRate) {
             stuffyImageEl.classList.add("capture-success");
-            let capturedOverlay = document.createElement("div");
-            capturedOverlay.className = "captured-text";
-            capturedOverlay.innerText = "Captured!";
-            document.getElementById("captureContent").appendChild(capturedOverlay);
+            let capturedOverlayElem = document.createElement("div");
+            capturedOverlayElem.className = "captured-text";
+            capturedOverlayElem.innerText = "Captured!";
+            document.getElementById("captureContent").appendChild(capturedOverlayElem);
             confetti({
               particleCount: 100,
               spread: 70,
               origin: { y: 0.6 }
             });
             setTimeout(() => {
-              capturedStuffies.push(stuffy);
+              // Instead of always pushing, check if this stuffy already exists (by name)
+              let existing = capturedStuffies.find(s => s.name === stuffy.name);
+              if (existing) {
+                existing.count = (existing.count || 1) + 1;
+              } else {
+                stuffy.count = 1;
+                capturedStuffies.push(stuffy);
+              }
               saveCapturedStuffies();
               stuffy.captured = true;
               updateStuffyCollection();
@@ -848,8 +873,8 @@
               setTimeout(() => spawnStuffies(), respawnDelay);
               rollCaptureBtn.disabled = false;
               captureOverlay.style.display = "none";
-              if (capturedOverlay && capturedOverlay.parentNode) {
-                capturedOverlay.parentNode.removeChild(capturedOverlay);
+              if (capturedOverlayElem && capturedOverlayElem.parentNode) {
+                capturedOverlayElem.parentNode.removeChild(capturedOverlayElem);
               }
               stuffyImageEl.classList.remove("capture-success");
             }, 1000);
@@ -895,6 +920,7 @@
     }
     
     function saveCapturedStuffies() {
+      // Ensure we save the count property along with other properties
       const savableStuffies = capturedStuffies.map(stuffy => ({
         id: stuffy.id,
         name: stuffy.name,
@@ -906,7 +932,8 @@
         eats: stuffy.eats,
         favoriteColor: stuffy.favoriteColor,
         favoriteActivity: stuffy.favoriteActivity,
-        captured: stuffy.captured
+        captured: stuffy.captured,
+        count: stuffy.count || 1
       }));
       localStorage.setItem("capturedStuffies", JSON.stringify(savableStuffies));
     }
@@ -917,9 +944,13 @@
       if (capturedStuffies.length === 0) {
         collectionDiv.innerHTML = "No stuffed animals captured yet.";
       } else {
-        collectionDiv.innerHTML = capturedStuffies.map(stuffy =>
-          `<img src="${stuffy.image}" alt="${stuffy.name}" class="stuffy-img" onclick="showDetails('${stuffy.id}')">`
-        ).join('');
+        collectionDiv.innerHTML = capturedStuffies.map(stuffy => {
+          const multiplier = stuffy.count > 1 ? `<span class="multiplier">x${stuffy.count}</span>` : "";
+          return `<div class="collection-item" onclick="showDetails('${stuffy.id}')">
+            <img src="${stuffy.image}" alt="${stuffy.name}" class="stuffy-img">
+            ${multiplier}
+          </div>`;
+        }).join('');
       }
     }
     
@@ -937,14 +968,16 @@
       document.getElementById("detailRarity").innerText = `Rarity: ${stuffy.rarity.name}`;
       document.getElementById("detailGold").innerText = `Gold Value: ${stuffy.gold}`;
       
-      // Update purchased items display:
+      // Update purchased items display with duplicate count
       const purchasedItemsContainer = document.getElementById("purchasedItems");
       if (stuffy.items && stuffy.items.length > 0) {
-        purchasedItemsContainer.innerHTML = stuffy.items.map(item => `
-          <div style="margin: 5px;">
+        purchasedItemsContainer.innerHTML = stuffy.items.map(item => {
+          const multiplier = item.count && item.count > 1 ? `<span class="multiplier">x${item.count}</span>` : "";
+          return `<div class="collection-item" style="margin:5px;">
             <img src="${item.image}" alt="${item.id}" style="width:50px; height:50px; border: 2px solid #ccc; border-radius:5px; object-fit:cover;">
-          </div>
-        `).join('');
+            ${multiplier}
+          </div>`;
+        }).join('');
       } else {
         purchasedItemsContainer.innerHTML = "None purchased yet.";
       }
@@ -971,14 +1004,28 @@
       const index = capturedStuffies.findIndex(s => s.id === stuffyId);
       if (index === -1) return;
       const stuffy = capturedStuffies[index];
-      playerGold += stuffy.gold;
-      capturedStuffies.splice(index, 1);
+      
+      // Prompt for number to sell
+      let sellCount = prompt(`You have ${stuffy.count} of ${stuffy.name}. How many do you want to sell?`, "1");
+      sellCount = parseInt(sellCount);
+      if (isNaN(sellCount) || sellCount < 1) return;
+      
+      let goldGained = sellCount * stuffy.gold;
+      playerGold += goldGained;
+      
+      if (stuffy.count > sellCount) {
+        stuffy.count -= sellCount;
+      } else {
+        capturedStuffies.splice(index, 1);
+      }
+      
       saveCapturedStuffies();
       savePlayerGold();
       updateStuffyCollection();
       updateFullCollection();
       updateGoldDisplay();
       document.getElementById("detailsOverlay").style.display = "none";
+      showAlert(`Sold ${sellCount} of ${stuffy.name} for ${goldGained} gold!`);
     }
     
     /***** SHOP FUNCTIONALITY *****/
@@ -1031,14 +1078,20 @@
       if (!stuffy.items) {
         stuffy.items = [];
       }
-      stuffy.items.push(item);
+      // Check for duplicate item; increment count if exists, otherwise add it with count=1
+      let existingItem = stuffy.items.find(it => it.id === item.id);
+      if (existingItem) {
+        existingItem.count = (existingItem.count || 1) + 1;
+      } else {
+        item.count = 1;
+        stuffy.items.push(item);
+      }
       saveCapturedStuffies();
       showAlert(`${item.id} purchased for ${item.cost} gold!`);
       
-      // Refresh the details display so the overlay is visible
+      // Refresh details display so the overlay is visible
       showDetails(stuffyId);
       
-      // Trigger success animation after a short delay
       setTimeout(() => {
         animatePurchaseSuccess(item);
       }, 100);
