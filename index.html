@@ -4,10 +4,8 @@
   <meta charset="UTF-8">
   <title>GeoStuffy - Stuffed Animal Capture Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
   <style>
-    /* Basic Reset & Layout */
     body, html {
       margin: 0;
       padding: 0;
@@ -17,7 +15,6 @@
     }
     #map { height: 70vh; width: 100%; }
     
-    /* Player Marker – Blinking Blue Dot */
     .blinking-circle {
       width: 12px;
       height: 12px;
@@ -33,21 +30,18 @@
       100% { opacity: 1; }
     }
     
-    /* Interaction Circle */
     .interaction-circle {
       stroke: blue;
       fill: blue;
       fill-opacity: 0.2;
     }
     
-    /* Stuffed Animal Marker Styles (No dots) */
     .stuffy-marker {
       position: absolute;
       transform: translate(-50%, -50%);
       text-align: center;
       pointer-events: auto;
     }
-    /* Map marker image now includes the rarity class for glow */
     .stuffy-image {
       width: 35px;
       height: 35px;
@@ -55,13 +49,11 @@
       display: block;
       transition: transform 0.5s;
     }
-    /* Rarity visual effects applied as CSS filters (glow effect) */
     .normal { filter: brightness(1); }
     .rare { filter: brightness(1.2) hue-rotate(220deg); }
     .epic { filter: brightness(1.3) hue-rotate(270deg); }
     .legendary { filter: brightness(1.5) hue-rotate(40deg) drop-shadow(0px 0px 6px gold); }
     
-    /* Capture Overlay – Responsive */
     #captureOverlay {
       position: fixed;
       top: 0; left: 0;
@@ -84,6 +76,7 @@
       text-align: center;
       max-width: 90vw;
       width: 300px;
+      position: relative;
     }
     #captureContent img {
       max-width: 150px;
@@ -102,7 +95,6 @@
     }
     #neededRoll { font-size: 1.2em; margin-bottom: 10px; }
     
-    /* Capture Buttons */
     button {
       padding: 10px 20px;
       margin: 10px;
@@ -133,44 +125,96 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     
-    /* Capture Animation Effects applied to the capture overlay image */
-    .capture-success { animation: neonBurst 0.6s forwards; }
-    @keyframes neonBurst {
-      0% { transform: rotate(0deg) scale(1); }
-      50% { transform: rotate(180deg) scale(1.2); }
-      100% { transform: rotate(360deg) scale(0); }
+    /* Enhanced Success Animation */
+    .capture-success {
+      animation: successAnimation 2s forwards;
+    }
+    @keyframes successAnimation {
+      0% { transform: scale(1); filter: brightness(1); }
+      20% { transform: scale(1.2); filter: brightness(1.5) drop-shadow(0 0 10px yellow); }
+      40% { transform: scale(1.1) rotate(360deg); }
+      60% { transform: scale(1.3); }
+      100% { transform: scale(0); }
+    }
+    
+    /* Enhanced Failure Animation */
+    .capture-fail {
+      animation: failShake 0.5s;
+    }
+    @keyframes failShake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      50% { transform: translateX(10px); }
+      75% { transform: translateX(-10px); }
+      100% { transform: translateX(0); }
     }
     .fail-overlay {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 50px;
+      font-size: 80px;
       color: red;
       font-weight: bold;
+      animation: fadeOut 1s forwards;
+    }
+    .success-text {
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      color: gold;
+      animation: fadeOut 2s forwards;
+    }
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
     }
     
-    /* Collection Display */
+    /* Confetti */
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      animation: confettiFall 2s linear forwards;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-100vh) rotate(0deg); }
+      100% { transform: translateY(100vh) rotate(720deg); }
+    }
+    
+    /* Collection Styles */
     #collection {
       padding: 10px;
       background: #fff;
       border-top: 2px solid #ccc;
       text-align: center;
     }
-    #collection h2 { margin-top: 0; }
+    #collectionDisplay {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
     .stuffy-img { 
       width: 50px; 
       height: 50px; 
-      margin: 5px; 
       border: 2px solid #ccc; 
       border-radius: 5px; 
       object-fit: cover;
       transition: transform 0.3s; 
       cursor: pointer;
     }
-    .stuffy-img:hover { transform: scale(1.1); border-color: #4CAF50; }
+    .stuffy-img.uncaptured {
+      filter: grayscale(100%);
+    }
+    .stuffy-img:hover { 
+      transform: scale(1.1); 
+      border-color: #4CAF50; 
+    }
     
-    /* Details Card Overlay for Captured Stuffies */
+    /* Details Overlay */
     #detailsOverlay {
       position: fixed;
       top: 0; left: 0;
@@ -214,7 +258,6 @@
 <body>
   <div id="map"></div>
   
-  <!-- Capture Overlay -->
   <div id="captureOverlay">
     <div id="captureContent">
       <h2 id="stuffyName">Stuffy</h2>
@@ -230,7 +273,6 @@
     </div>
   </div>
   
-  <!-- Details Card Overlay for Captured Stuffies -->
   <div id="detailsOverlay">
     <div id="detailsContent">
       <h2 id="detailName">Stuffy Details</h2>
@@ -244,24 +286,22 @@
     </div>
   </div>
   
-  <!-- Collection Display -->
   <div id="collection">
-    <h2>Your Captured Stuffies</h2>
-    <div id="collectionDisplay">No stuffed animals captured yet.</div>
+    <h2>Your Stuffy Collection</h2>
+    <div id="collectionDisplay"></div>
     <button onclick="transferToHome()">Transfer to Home</button>
   </div>
   
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    /***** GLOBAL VARIABLES *****/
     let capturedStuffies = [];
     let activeStuffies = [];
-    const maxStuffies = 25; // Always show 25 stuffies within 1 mile
-    const respawnDelay = 10 * 60 * 1000; // 10 minutes respawn delay
+    const maxStuffies1Mile = 50; // Doubled spawn rate: 50 within 1 mile
+    const maxStuffies3Miles = 100; // 100 within 3 miles
+    const respawnDelay = 10 * 60 * 1000;
     let playerLat, playerLng;
-    let stuffyDetails = []; // Loaded from stuffyDetails.json
+    let stuffyDetails = [];
 
-    // 50 unique cute names for fallback (if JSON not loaded)
     const stuffyNames = [
       "Fluffy", "Snowball", "Coco", "Bella", "Muffin", "Peaches", "Pip", "Winnie", "Daisy", "Lucky",
       "Biscuit", "Cupcake", "Sunny", "Buddy", "Pumpkin", "Gizmo", "Cookie", "Bubbles", "Fifi", "Teddy",
@@ -270,24 +310,35 @@
       "Milo", "Ruby", "Oreo", "Poppy", "Scout", "Willow", "Harley", "Nala", "Zeus", "Lola"
     ];
 
-    // Rarity levels with success thresholds, gold values, and CSS classes
+    // Fixed rarity with capture difficulty
     const rarityLevels = {
-      normal: { chance: 60, name: "Cuddly", gold: 10, successRate: 70, cssClass: "normal" },
-      rare: { chance: 25, name: "Mystic", gold: 30, successRate: 50, cssClass: "rare" },
-      epic: { chance: 10, name: "Ethereal", gold: 100, successRate: 30, cssClass: "epic" },
-      legendary: { chance: 5, name: "Celestial", gold: 500, successRate: 10, cssClass: "legendary" }
+      normal: { name: "Normal", gold: 10, rollNeeded: 5, cssClass: "normal" },
+      rare: { name: "Rare", gold: 30, rollNeeded: 10, cssClass: "rare" },
+      epic: { name: "Epic", gold: 100, rollNeeded: 15, cssClass: "epic" },
+      legendary: { name: "Legendary", gold: 500, rollNeeded: 20, cssClass: "legendary" }
     };
 
-    /***** LOAD STUFFY DETAILS FROM JSON *****/
     fetch('stuffyDetails.json')
       .then(response => response.json())
       .then(data => {
-        stuffyDetails = data;
+        stuffyDetails = data.map((stuffy, index) => ({
+          ...stuffy,
+          id: index + 1,
+          rarity: assignFixedRarity(index + 1),
+          image: `Subject${index + 1}.png`
+        }));
         if (playerLat && playerLng) spawnStuffies();
+        updateStuffyCollection();
       })
       .catch(error => console.error("Error loading stuffyDetails.json:", error));
 
-    /***** MAP & GEOPOSITIONING SETUP *****/
+    function assignFixedRarity(id) {
+      if (id <= 30) return rarityLevels.normal;
+      if (id <= 40) return rarityLevels.rare;
+      if (id <= 47) return rarityLevels.epic;
+      return rarityLevels.legendary;
+    }
+
     const defaultLat = 51.505, defaultLng = -0.09;
     var map = L.map('map').setView([defaultLat, defaultLng], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -295,7 +346,6 @@
       attribution: '© OpenStreetMap'
     }).addTo(map);
     
-    // Player Marker – Blinking Dot
     var playerMarker = L.marker([defaultLat, defaultLng], {
       icon: L.divIcon({
         className: '',
@@ -305,14 +355,12 @@
       })
     }).addTo(map);
     
-    // Interaction Circle (230 m ≈ 250 yards)
     var interactionRadius = 230;
     var interactionCircle = L.circle(playerMarker.getLatLng(), {
       radius: interactionRadius,
       className: 'interaction-circle'
     }).addTo(map);
     
-    // Update player's location (do not auto-recenter the map)
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(function(position) {
         playerLat = position.coords.latitude;
@@ -326,47 +374,54 @@
       }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 5000 });
     }
     
-    /***** SPAWNING STUFFIES NEARBY *****/
     function spawnStuffies() {
       if (stuffyDetails.length === 0) return;
-      while (activeStuffies.length < maxStuffies) {
-        let rarity = assignRarity();
-        let detail = (stuffyDetails.length > 0)
-          ? stuffyDetails[Math.floor(Math.random() * stuffyDetails.length)]
-          : { name: stuffyNames[Math.floor(Math.random() * stuffyNames.length)], eats: "Kibble", favoriteColor: "Blue", favoriteActivity: "Playing" };
-        let name = `${rarity.name} ${detail.name}`;
-        let point = randomPointNearPlayer();
-        let stuffy = {
-          id: `stuffy_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-          name: name,
-          rarity: rarity,
-          lat: point.lat,
-          lng: point.lng,
-          gold: rarity.gold,
-          image: `Subject${(Math.floor(Math.random() * 50) + 1)}.png`,
-          eats: detail.eats,
-          favoriteColor: detail.favoriteColor,
-          favoriteActivity: detail.favoriteActivity
-        };
-        createStuffyMarker(stuffy);
-        activeStuffies.push(stuffy);
+      
+      // Spawn within 1 mile (1609 meters)
+      while (activeStuffies.length < maxStuffies1Mile) {
+        let stuffy = getRandomStuffy();
+        let point = randomPointNearPlayer(1609);
+        let newStuffy = createStuffyInstance(stuffy, point);
+        createStuffyMarker(newStuffy);
+        activeStuffies.push(newStuffy);
+      }
+      
+      // Spawn additional stuffies between 1-3 miles (4827 meters)
+      while (activeStuffies.length < maxStuffies3Miles) {
+        let stuffy = getRandomStuffy();
+        let point = randomPointNearPlayer(4827, 1609); // Between 1-3 miles
+        let newStuffy = createStuffyInstance(stuffy, point);
+        createStuffyMarker(newStuffy);
+        activeStuffies.push(newStuffy);
       }
     }
-    
-    function assignRarity() {
-      let roll = Math.random() * 100;
-      let cumulative = 0;
-      for (let key in rarityLevels) {
-        cumulative += rarityLevels[key].chance;
-        if (roll <= cumulative) return rarityLevels[key];
-      }
-      return rarityLevels.normal;
+
+    function getRandomStuffy() {
+      return stuffyDetails[Math.floor(Math.random() * stuffyDetails.length)];
+    }
+
+    function createStuffyInstance(stuffy, point) {
+      return {
+        id: `stuffy_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+        baseId: stuffy.id,
+        name: stuffy.name,
+        rarity: stuffy.rarity,
+        lat: point.lat,
+        lng: point.lng,
+        gold: stuffy.rarity.gold,
+        image: stuffy.image,
+        eats: stuffy.eats,
+        favoriteColor: stuffy.favoriteColor,
+        favoriteActivity: stuffy.favoriteActivity
+      };
     }
     
-    function randomPointNearPlayer() {
-      let r = Math.random() * 0.015;
+    function randomPointNearPlayer(maxDistance, minDistance = 0) {
+      let r = Math.sqrt(Math.random()) * (maxDistance - minDistance) + minDistance;
       let theta = Math.random() * 2 * Math.PI;
-      return { lat: playerLat + r * Math.cos(theta), lng: playerLng + r * Math.sin(theta) };
+      let latOffset = (r * Math.cos(theta)) / 111000; // Approx meters to degrees
+      let lngOffset = (r * Math.sin(theta)) / (111000 * Math.cos(playerLat * Math.PI / 180));
+      return { lat: playerLat + latOffset, lng: playerLng + lngOffset };
     }
     
     function createStuffyMarker(stuffy) {
@@ -389,11 +444,10 @@
       stuffy.marker = marker;
     }
     
-    /***** UPDATE ACTIVE STUFFIES WHEN PLAYER MOVES *****/
     function updateActiveStuffies() {
       activeStuffies = activeStuffies.filter(stuffy => {
         let distance = L.latLng(playerLat, playerLng).distanceTo(L.latLng(stuffy.lat, stuffy.lng));
-        if (distance > 1609) {
+        if (distance > 4827) { // 3 miles
           if (stuffy.marker) map.removeLayer(stuffy.marker);
           return false;
         }
@@ -402,7 +456,6 @@
       spawnStuffies();
     }
     
-    /***** CAPTURE SYSTEM *****/
     const captureOverlay = document.getElementById("captureOverlay");
     const stuffyNameEl = document.getElementById("stuffyName");
     const neededRollEl = document.getElementById("neededRoll");
@@ -418,50 +471,56 @@
     function startCapture(stuffy, marker) {
       captureOverlay.style.display = "flex";
       stuffyNameEl.innerText = stuffy.name;
-      neededRollEl.innerText = `Roll ${stuffy.rarity.successRate} or higher to capture`;
+      neededRollEl.innerText = `Roll ${stuffy.rarity.rollNeeded}+ to capture`;
       stuffyGoldEl.innerText = `Gold Value: ${stuffy.gold}`;
       stuffyEatsEl.innerText = `Eats: ${stuffy.eats || "Unknown"}`;
       stuffyFavColorEl.innerText = `Favorite Color: ${stuffy.favoriteColor || "Unknown"}`;
       stuffyFavActivityEl.innerText = `Loves: ${stuffy.favoriteActivity || "Unknown"}`;
-      // In the capture overlay, use the image element (not the map marker) for animation.
       stuffyImageEl.src = stuffy.image;
-      // Remove any previous animation classes.
-      stuffyImageEl.classList.remove("capture-success");
+      stuffyImageEl.classList.remove("capture-success", "capture-fail");
       rollDisplayEl.innerText = "--";
       
       rollCaptureBtn.onclick = function() {
         rollCaptureBtn.disabled = true;
         animateWheelRoll(2000, (finalRoll) => {
           rollDisplayEl.innerText = finalRoll;
-          if (finalRoll >= stuffy.rarity.successRate) {
-            // Successful capture: animate the image in the capture overlay
+          if (finalRoll >= stuffy.rarity.rollNeeded) {
             stuffyImageEl.classList.add("capture-success");
+            let successText = document.createElement("div");
+            successText.className = "success-text";
+            successText.innerText = "Captured!";
+            captureOverlay.appendChild(successText);
+            createConfetti();
             setTimeout(() => {
               showAlert(`Captured ${stuffy.name} (Roll: ${finalRoll})!`);
               capturedStuffies.push(stuffy);
               updateStuffyCollection();
               map.removeLayer(marker);
               activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
-              setTimeout(() => spawnStuffies(), respawnDelay);
+              captureOverlay.removeChild(successText);
               rollCaptureBtn.disabled = false;
               captureOverlay.style.display = "none";
-              stuffyImageEl.classList.remove("capture-success");
-            }, 600);
+            }, 2000);
           } else {
-            // Failed capture: show red X overlay on capture overlay image
+            stuffyImageEl.classList.add("capture-fail");
             let failOverlay = document.createElement("div");
             failOverlay.className = "fail-overlay";
-            failOverlay.innerText = "❌";
-            captureOverlay.querySelector("#captureContent").appendChild(failOverlay);
+            failOverlay.innerText = "X";
+            captureOverlay.appendChild(failOverlay);
+            let failText = document.createElement("div");
+            failText.className = "success-text";
+            failText.style.color = "red";
+            failText.innerText = "Failed to Capture!";
+            captureOverlay.appendChild(failText);
             setTimeout(() => {
               showAlert(`Capture failed (Roll: ${finalRoll})!`);
-              captureOverlay.querySelector("#captureContent").removeChild(failOverlay);
+              captureOverlay.removeChild(failOverlay);
+              captureOverlay.removeChild(failText);
               map.removeLayer(marker);
               activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
-              setTimeout(() => spawnStuffies(), respawnDelay);
               rollCaptureBtn.disabled = false;
               captureOverlay.style.display = "none";
-            }, 600);
+            }, 1000);
           }
         });
       };
@@ -475,45 +534,41 @@
     function animateWheelRoll(duration, callback) {
       let startTime = Date.now();
       let interval = setInterval(() => {
-        rollDisplayEl.innerText = Math.floor(Math.random() * 100) + 1;
+        rollDisplayEl.innerText = Math.floor(Math.random() * 20) + 1;
         if (Date.now() - startTime >= duration) {
           clearInterval(interval);
-          let finalRoll = Math.floor(Math.random() * 100) + 1;
+          let finalRoll = Math.floor(Math.random() * 20) + 1;
           callback(finalRoll);
         }
       }, 100);
     }
     
-    /***** COLLECTION DISPLAY & DETAILS CARD *****/
-    function updateStuffyCollection() {
-      let collectionDiv = document.getElementById("collectionDisplay");
-      collectionDiv.innerHTML = capturedStuffies.map(stuffy =>
-        `<img src="${stuffy.image}" alt="${stuffy.name}" class="stuffy-img" onclick="showDetails('${stuffy.id}')">`
-      ).join('');
+    function createConfetti() {
+      for (let i = 0; i < 50; i++) {
+        let confetti = document.createElement("div");
+        confetti.className = "confetti";
+        confetti.style.left = Math.random() * 100 + "vw";
+        confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        confetti.style.animationDelay = Math.random() * 0.5 + "s";
+        captureOverlay.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 2000);
+      }
     }
     
-    const detailsOverlay = document.getElementById("detailsOverlay") || (function(){
-      let div = document.createElement("div");
-      div.id = "detailsOverlay";
-      div.innerHTML = `
-        <div id="detailsContent">
-          <h2 id="detailName">Stuffy Details</h2>
-          <img id="detailImage" src="" alt="Stuffy">
-          <p id="detailEats"></p>
-          <p id="detailFavColor"></p>
-          <p id="detailFavActivity"></p>
-          <p id="detailRarity"></p>
-          <p id="detailGold"></p>
-          <button id="closeDetails">Close</button>
-        </div>
-      `;
-      document.body.appendChild(div);
-      return div;
-    })();
+    function updateStuffyCollection() {
+      let collectionDiv = document.getElementById("collectionDisplay");
+      collectionDiv.innerHTML = stuffyDetails.map(stuffy => {
+        const isCaptured = capturedStuffies.some(s => s.baseId === stuffy.id);
+        return `<img src="${stuffy.image}" alt="${stuffy.name}" class="stuffy-img ${isCaptured ? '' : 'uncaptured'}" onclick="showDetails(${stuffy.id})" ${isCaptured ? '' : 'title="Not Captured Yet"'}">`;
+      }).join('');
+    }
+    
+    const detailsOverlay = document.getElementById("detailsOverlay");
     
     function showDetails(stuffyId) {
-      const stuffy = capturedStuffies.find(s => s.id === stuffyId);
-      if (!stuffy) return;
+      const stuffy = stuffyDetails.find(s => s.id === stuffyId);
+      const capturedStuffy = capturedStuffies.find(s => s.baseId === stuffyId);
+      if (!stuffy || !capturedStuffy) return;
       document.getElementById("detailName").innerText = stuffy.name;
       document.getElementById("detailImage").src = stuffy.image;
       document.getElementById("detailEats").innerText = `Eats: ${stuffy.eats || "Unknown"}`;
@@ -527,12 +582,10 @@
       };
     }
     
-    /***** ALERT BOX *****/
     function showAlert(message) {
       alert(message);
     }
     
-    /***** INITIALIZATION *****/
     navigator.geolocation.getCurrentPosition(function(position) {
       playerLat = position.coords.latitude;
       playerLng = position.coords.longitude;
@@ -547,7 +600,6 @@
       spawnStuffies();
     });
     
-    /***** HOME BASE STORAGE (Transfer Captured Stuffies) *****/
     function transferToHome() {
       if (capturedStuffies.length === 0) {
         showAlert("No stuffies to transfer!");
@@ -563,23 +615,5 @@
     
     updateStuffyCollection();
   </script>
-  <style>
-    /* Additional CSS for capture overlay animations (applied to the capture overlay image) */
-    .capture-success { animation: neonBurst 0.6s forwards; }
-    @keyframes neonBurst {
-      0% { transform: rotate(0deg) scale(1); }
-      50% { transform: rotate(180deg) scale(1.2); }
-      100% { transform: rotate(360deg) scale(0); }
-    }
-    .fail-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 50px;
-      color: red;
-      font-weight: bold;
-    }
-  </style>
 </body>
 </html>
