@@ -19,15 +19,30 @@
       box-shadow: 0 0 5px rgba(0,0,255,0.8);
       animation: blink 1s infinite;
     }
-    @keyframes blink {
-      0% { opacity: 1; }
-      50% { opacity: 0.3; }
-      100% { opacity: 1; }
-    }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
     /* Smaller Stuffy Markers */
     .stuffy-marker { position: absolute; transform: translate(-50%, -50%); text-align: center; }
-    .stuffy-image { width: 35px; height: 35px; border-radius: 5px; display: block; filter: brightness(1); }
+    .stuffy-image { width: 35px; height: 35px; border-radius: 5px; display: block; filter: brightness(1); transition: transform 0.5s; }
+
+    /* Capture Effects */
+    .capture-success { animation: spinAndShrink 0.5s forwards; }
+    .capture-fail { filter: brightness(0.5); }
+    @keyframes spinAndShrink {
+      0% { transform: rotate(0) scale(1); }
+      100% { transform: rotate(360deg) scale(0); }
+    }
+
+    /* Failure X */
+    .fail-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 50px;
+      color: red;
+      font-weight: bold;
+    }
 
     /* Rarity Glow */
     .normal { filter: brightness(1); }
@@ -77,7 +92,7 @@
       <h2 id="stuffyName">Stuffy</h2>
       <p id="neededRoll"></p>
       <p id="stuffyGold"></p>
-      <img id="stuffyImage" src="" style="width:100px;">
+      <img id="stuffyImage" src="" class="stuffy-image">
       <div id="rollDisplay">--</div>
       <button id="rollCaptureBtn">Roll Capture</button>
       <button id="closeCapture">Cancel</button>
@@ -89,32 +104,26 @@
     /***** GLOBAL VARIABLES *****/
     let capturedStuffies = [];
     let activeStuffies = [];
-    const maxStuffies = 25; // 25 within 1 mile
-    const respawnDelay = 10 * 60 * 1000; // 10-minute respawn
+    const maxStuffies = 25;
     let playerLat, playerLng;
 
     const rarityLevels = {
-      normal: { chance: 60, name: "Cuddly Stuffy", gold: 10, successRate: 70, cssClass: "normal" },
-      rare: { chance: 25, name: "Mystic Stuffy", gold: 30, successRate: 50, cssClass: "rare" },
-      epic: { chance: 10, name: "Ethereal Stuffy", gold: 100, successRate: 30, cssClass: "epic" },
-      legendary: { chance: 5, name: "Celestial Stuffy", gold: 500, successRate: 10, cssClass: "legendary" }
+      normal: { chance: 60, name: "Cuddly", gold: 10, successRate: 70, cssClass: "normal" },
+      rare: { chance: 25, name: "Mystic", gold: 30, successRate: 50, cssClass: "rare" },
+      epic: { chance: 10, name: "Ethereal", gold: 100, successRate: 30, cssClass: "epic" },
+      legendary: { chance: 5, name: "Celestial", gold: 500, successRate: 10, cssClass: "legendary" }
     };
+
+    const stuffyNames = ["Fluffy", "Squishy", "Snuggles", "Puff", "Wiggles", "Fuzzy", "Bubbles", "Teddy", "Muffin", "Cinnamon"];
 
     /***** MAP SETUP *****/
     var map = L.map('map').setView([51.505, -0.09], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-    // Player Marker (Blinking Dot)
+    
     var playerMarker = L.marker([51.505, -0.09], {
-      icon: L.divIcon({
-        className: '',
-        html: '<div class="blinking-circle"></div>',
-        iconSize: [12, 12],
-        iconAnchor: [6, 6]
-      })
+      icon: L.divIcon({ className: '', html: '<div class="blinking-circle"></div>', iconSize: [12, 12], iconAnchor: [6, 6] })
     }).addTo(map);
 
-    // Interaction Circle
     var interactionRadius = 230;
     var interactionCircle = L.circle(playerMarker.getLatLng(), { radius: interactionRadius, className: 'interaction-circle' }).addTo(map);
 
@@ -122,45 +131,17 @@
     function spawnStuffies() {
       while (activeStuffies.length < maxStuffies) {
         let rarity = assignRarity();
+        let name = `${rarity.name} ${stuffyNames[Math.floor(Math.random() * stuffyNames.length)]}`;
         let point = randomPointNearPlayer();
-        let stuffy = {
-          id: `stuffy_${Date.now()}`,
-          name: `${rarity.name}`,
-          rarity: rarity,
-          lat: point.lat,
-          lng: point.lng,
-          gold: rarity.gold,
-          image: `Subject${(Math.floor(Math.random() * 50) + 1)}.png`
-        };
+        let stuffy = { id: `stuffy_${Date.now()}`, name, rarity, lat: point.lat, lng: point.lng, gold: rarity.gold, image: `Subject${(Math.floor(Math.random() * 50) + 1)}.png` };
         createStuffyMarker(stuffy);
         activeStuffies.push(stuffy);
       }
     }
 
-    function assignRarity() {
-      let roll = Math.random() * 100;
-      let cumulative = 0;
-      for (let key in rarityLevels) {
-        cumulative += rarityLevels[key].chance;
-        if (roll <= cumulative) return rarityLevels[key];
-      }
-      return rarityLevels.normal;
-    }
-
-    function randomPointNearPlayer() {
-      let r = Math.random() * 0.015; // ~1 mile max
-      let theta = Math.random() * 2 * Math.PI;
-      return { lat: playerLat + r * Math.cos(theta), lng: playerLng + r * Math.sin(theta) };
-    }
-
     function createStuffyMarker(stuffy) {
       let marker = L.marker([stuffy.lat, stuffy.lng], {
-        icon: L.divIcon({
-          className: `stuffy-marker ${stuffy.rarity.cssClass}`,
-          html: `<img src="${stuffy.image}" class="stuffy-image">`,
-          iconSize: [35, 35],
-          iconAnchor: [17, 17]
-        })
+        icon: L.divIcon({ className: `stuffy-marker ${stuffy.rarity.cssClass}`, html: `<img src="${stuffy.image}" class="stuffy-image">`, iconSize: [35, 35], iconAnchor: [17, 17] })
       }).addTo(map);
       marker.on('click', () => startCapture(stuffy, marker));
     }
@@ -182,7 +163,6 @@
       interactionCircle.setLatLng([playerLat, playerLng]);
       spawnStuffies();
     });
-
   </script>
 </body>
 </html>
