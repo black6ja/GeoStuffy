@@ -522,6 +522,16 @@
     const rollCaptureBtn = document.getElementById("rollCaptureBtn");
     const closeCaptureBtn = document.getElementById("closeCapture");
     
+    window.addEventListener("load", function() {
+  const savedStuffies = localStorage.getItem("capturedStuffies");
+  if (savedStuffies) {
+    capturedStuffies = JSON.parse(savedStuffies);
+    updateStuffyCollection();
+    updateFullCollection();
+  }
+});
+
+
     function startCapture(stuffy, marker) {
       captureOverlay.style.display = "flex";
       stuffyNameEl.innerText = stuffy.name;
@@ -607,15 +617,6 @@
   });
 };
 
-window.addEventListener("load", function() {
-  const savedStuffies = localStorage.getItem("capturedStuffies");
-  if (savedStuffies) {
-    capturedStuffies = JSON.parse(savedStuffies);
-    updateStuffyCollection();
-    updateFullCollection();
-  }
-});
-      
       // Disable closing the capture overlay while capturing
       closeCaptureBtn.onclick = function() {
         if (rollCaptureBtn.disabled) return; // Do nothing if a roll is in progress
