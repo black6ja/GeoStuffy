@@ -279,21 +279,19 @@
       filter: grayscale(100%);
     }
     
+    /* Shop Modal */
     #shopModal {
-  display: none;
-  position: fixed;
-  top: 0; 
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.8);
-  /* Remove the following line so the shop stays hidden by default */
-  /* display: flex; */
-  align-items: center;
-  justify-content: center;
-  z-index: 8000;
-}
-
+      display: none;
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      align-items: center;
+      justify-content: center;
+      z-index: 8000;
+    }
     #shopContent {
       background: #fff;
       padding: 20px;
@@ -348,20 +346,20 @@
   <div id="detailsOverlay">
     <div id="detailsContent">
       <h2 id="detailName">Stuffy Details</h2>
-    <img id="detailImage" src="" alt="Stuffy">
-    <p id="detailEats"></p>
-    <p id="detailFavColor"></p>
-    <p id="detailFavActivity"></p>
-    <p id="detailRarity"></p>
-    <p id="detailGold"></p>
+      <img id="detailImage" src="" alt="Stuffy">
+      <p id="detailEats"></p>
+      <p id="detailFavColor"></p>
+      <p id="detailFavActivity"></p>
+      <p id="detailRarity"></p>
+      <p id="detailGold"></p>
 
-    <!-- New Purchased Items Section -->
-    <h3>Purchased Items</h3>
-    <div id="purchasedItems" style="display: flex; flex-wrap: wrap; justify-content: center;"></div>
+      <!-- New Purchased Items Section -->
+      <h3>Purchased Items</h3>
+      <div id="purchasedItems" style="display: flex; flex-wrap: wrap; justify-content: center;"></div>
 
-    <button id="sellStuffyBtn">Sell for Gold</button>
-    <button id="openShopBtn">Shop</button>
-    <button id="closeDetails">Close</button>
+      <button id="sellStuffyBtn">Sell for Gold</button>
+      <button id="openShopBtn">Shop</button>
+      <button id="closeDetails">Close</button>
     </div>
   </div>
   
@@ -391,6 +389,10 @@
     </div>
   </div>
   
+  <!-- Audio Elements for Purchase Feedback -->
+  <audio id="successAudio" src="success.mp3"></audio>
+  <audio id="failAudio" src="fail.mp3"></audio>
+  
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
@@ -414,25 +416,73 @@
       document.getElementById("goldValue").innerText = playerGold;
     }
     
-    function animatePurchase(item) {
-  // Example: use the same "capture-success" CSS animation (you could also create a dedicated class)
-  const detailImageEl = document.getElementById("detailImage");
-  detailImageEl.classList.add("capture-success");
-  
-  // Trigger a confetti effect (using your canvas-confetti library)
-  confetti({
-    particleCount: 50,
-    spread: 60,
-    origin: { y: 0.5 }
-  });
-  
-  // Remove the animation class after a short delay to reset
-  setTimeout(() => {
-    detailImageEl.classList.remove("capture-success");
-  }, 1000);
-}
-
-
+    /* Simple Purchase Success Animation with Audio and Overlay */
+    function animatePurchaseSuccess(item) {
+      const successAudio = document.getElementById("successAudio");
+      if(successAudio) {
+        successAudio.play();
+      }
+      
+      const overlay = document.createElement("div");
+      overlay.innerText = "Purchase Succeeded!";
+      overlay.style.position = "fixed";
+      overlay.style.top = "20%";
+      overlay.style.left = "50%";
+      overlay.style.transform = "translate(-50%, -50%)";
+      overlay.style.padding = "20px 40px";
+      overlay.style.backgroundColor = "rgba(0,255,0,0.8)";
+      overlay.style.color = "#fff";
+      overlay.style.fontSize = "1.5em";
+      overlay.style.borderRadius = "8px";
+      overlay.style.zIndex = "10000";
+      document.body.appendChild(overlay);
+      
+      // Also trigger a confetti burst
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.5 }
+      });
+      
+      setTimeout(() => {
+        overlay.style.transition = "opacity 1s";
+        overlay.style.opacity = 0;
+        setTimeout(() => {
+          if(overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }, 1000);
+      }, 1000);
+    }
+    
+    /* Simple Purchase Failure Animation with Audio and Overlay */
+    function animatePurchaseFail() {
+      const failAudio = document.getElementById("failAudio");
+      if(failAudio) {
+        failAudio.play();
+      }
+      
+      const overlay = document.createElement("div");
+      overlay.innerText = "Purchase Failed!";
+      overlay.style.position = "fixed";
+      overlay.style.top = "20%";
+      overlay.style.left = "50%";
+      overlay.style.transform = "translate(-50%, -50%)";
+      overlay.style.padding = "20px 40px";
+      overlay.style.backgroundColor = "rgba(255,0,0,0.8)";
+      overlay.style.color = "#fff";
+      overlay.style.fontSize = "1.5em";
+      overlay.style.borderRadius = "8px";
+      overlay.style.zIndex = "10000";
+      document.body.appendChild(overlay);
+      
+      setTimeout(() => {
+        overlay.style.transition = "opacity 1s";
+        overlay.style.opacity = 0;
+        setTimeout(() => {
+          if(overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }, 1000);
+      }, 1000);
+    }
+    
     // Rarity levels (from JSON)
     const rarityLevels = {
       normal: { name: "Cuddly", gold: 10, successRate: 5, cssClass: "normal" },
@@ -504,105 +554,105 @@
     };
     
     // Sample shop inventory (you can expand these arrays later)
-const shopInventory = {
-  toys: [
-    {
-      id: 'toy1',
-      image: 'toy1.png',
-      cost: 15,
-      desc: 'A colorful plush ball.',
-      availableFor: ['normal', 'rare', 'epic', 'legendary']
-    },
-    {
-      id: 'toy2',
-      image: 'toy2.png',
-      cost: 25,
-      desc: 'A silly plush car.',
-      availableFor: ['normal', 'rare', 'epic', 'legendary']
-    },
-    {
-      id: 'toy3',
-      image: 'toy3.png',
-      cost: 40,
-      desc: 'A playful plush train.',
-      availableFor: ['rare', 'epic', 'legendary']
-    },
-    {
-      id: 'toy4',
-      image: 'toy4.png',
-      cost: 50,
-      desc: 'A friendly plush airplane.',
-      availableFor: ['epic', 'legendary']
-    },
-    {
-      id: 'toy5',
-      image: 'toy5.png',
-      cost: 60,
-      desc: 'A classic rocking horse plush.',
-      availableFor: ['legendary']
-    }
-  ],
-  candy: [
-    {
-      id: 'candy1',
-      image: 'candy1.png',
-      cost: 10,
-      desc: 'A colorful lollipop plush!',
-      availableFor: ['normal', 'rare', 'epic', 'legendary']
-    },
-    {
-      id: 'candy2',
-      image: 'candy2.png',
-      cost: 15,
-      desc: 'A soft candy plush treat!',
-      availableFor: ['normal', 'rare', 'epic', 'legendary']
-    },
-    {
-      id: 'candy3',
-      image: 'candy3.png',
-      cost: 20,
-      desc: 'A sweet puffy cube plush!',
-      availableFor: ['epic', 'legendary']
-    }
-  ],
-  houses: [
-    {
-      id: 'house1',
-      image: 'house1.png',
-      cost: 100,
-      desc: 'A cozy pastel cottage.',
-      availableFor: ['normal', 'rare', 'epic', 'legendary']
-    },
-    {
-      id: 'house2',
-      image: 'house2.png',
-      cost: 150,
-      desc: 'A charming mushroom house.',
-      availableFor: ['rare', 'epic', 'legendary']
-    },
-    {
-      id: 'house3',
-      image: 'house3.png',
-      cost: 200,
-      desc: 'A leafy woodland abode.',
-      availableFor: ['epic', 'legendary']
-    },
-    {
-      id: 'house4',
-      image: 'house4.png',
-      cost: 300,
-      desc: 'A whimsical fairytale castle!',
-      availableFor: ['legendary']
-    },
-    {
-      id: 'house5',
-      image: 'house5.png',
-      cost: 400,
-      desc: 'A cozy igloo for chilly stuffies.',
-      availableFor: ['epic', 'legendary']
-    }
-  ]
-};
+    const shopInventory = {
+      toys: [
+        {
+          id: 'toy1',
+          image: 'toy1.png',
+          cost: 15,
+          desc: 'A colorful plush ball.',
+          availableFor: ['normal', 'rare', 'epic', 'legendary']
+        },
+        {
+          id: 'toy2',
+          image: 'toy2.png',
+          cost: 25,
+          desc: 'A silly plush car.',
+          availableFor: ['normal', 'rare', 'epic', 'legendary']
+        },
+        {
+          id: 'toy3',
+          image: 'toy3.png',
+          cost: 40,
+          desc: 'A playful plush train.',
+          availableFor: ['rare', 'epic', 'legendary']
+        },
+        {
+          id: 'toy4',
+          image: 'toy4.png',
+          cost: 50,
+          desc: 'A friendly plush airplane.',
+          availableFor: ['epic', 'legendary']
+        },
+        {
+          id: 'toy5',
+          image: 'toy5.png',
+          cost: 60,
+          desc: 'A classic rocking horse plush.',
+          availableFor: ['legendary']
+        }
+      ],
+      candy: [
+        {
+          id: 'candy1',
+          image: 'candy1.png',
+          cost: 10,
+          desc: 'A colorful lollipop plush!',
+          availableFor: ['normal', 'rare', 'epic', 'legendary']
+        },
+        {
+          id: 'candy2',
+          image: 'candy2.png',
+          cost: 15,
+          desc: 'A soft candy plush treat!',
+          availableFor: ['normal', 'rare', 'epic', 'legendary']
+        },
+        {
+          id: 'candy3',
+          image: 'candy3.png',
+          cost: 20,
+          desc: 'A sweet puffy cube plush!',
+          availableFor: ['epic', 'legendary']
+        }
+      ],
+      houses: [
+        {
+          id: 'house1',
+          image: 'house1.png',
+          cost: 100,
+          desc: 'A cozy pastel cottage.',
+          availableFor: ['normal', 'rare', 'epic', 'legendary']
+        },
+        {
+          id: 'house2',
+          image: 'house2.png',
+          cost: 150,
+          desc: 'A charming mushroom house.',
+          availableFor: ['rare', 'epic', 'legendary']
+        },
+        {
+          id: 'house3',
+          image: 'house3.png',
+          cost: 200,
+          desc: 'A leafy woodland abode.',
+          availableFor: ['epic', 'legendary']
+        },
+        {
+          id: 'house4',
+          image: 'house4.png',
+          cost: 300,
+          desc: 'A whimsical fairytale castle!',
+          availableFor: ['legendary']
+        },
+        {
+          id: 'house5',
+          image: 'house5.png',
+          cost: 400,
+          desc: 'A cozy igloo for chilly stuffies.',
+          availableFor: ['epic', 'legendary']
+        }
+      ]
+    };
     
     /***** LOAD STUFFY DETAILS FROM JSON *****/
     fetch('stuffyDetails.json')
@@ -874,83 +924,49 @@ const shopInventory = {
     }
     
     function showDetails(stuffyId) {
-  document.getElementById("collectionModal").style.display = "none";
-  
-  const stuffy = capturedStuffies.find(s => s.id === stuffyId);
-  if (!stuffy) return;
-  
-  document.getElementById("detailName").innerText = stuffy.name;
-  document.getElementById("detailImage").src = stuffy.image;
-  document.getElementById("detailEats").innerText = `Eats: ${stuffy.eats || "Unknown"}`;
-  document.getElementById("detailFavColor").innerText = `Favorite Color: ${stuffy.favoriteColor || "Unknown"}`;
-  document.getElementById("detailFavActivity").innerText = `Loves: ${stuffy.favoriteActivity || "Unknown"}`;
-  document.getElementById("detailRarity").innerText = `Rarity: ${stuffy.rarity.name}`;
-  document.getElementById("detailGold").innerText = `Gold Value: ${stuffy.gold}`;
-  
-  // Update purchased items display:
-  const purchasedItemsContainer = document.getElementById("purchasedItems");
-  if (stuffy.items && stuffy.items.length > 0) {
-    purchasedItemsContainer.innerHTML = stuffy.items.map(item => `
-      <div style="margin: 5px;">
-        <img src="${item.image}" alt="${item.id}" style="width:50px; height:50px; border: 2px solid #ccc; border-radius:5px; object-fit:cover;">
-      </div>
-    `).join('');
-  } else {
-    purchasedItemsContainer.innerHTML = "None purchased yet.";
-  }
-  
-  // Show Sell and Shop buttons
-  const sellBtn = document.getElementById("sellStuffyBtn");
-  sellBtn.style.display = "inline-block";
-  sellBtn.onclick = function() {
-    sellStuffy(stuffyId);
-  };
-  const shopBtn = document.getElementById("openShopBtn");
-  shopBtn.style.display = "inline-block";
-  shopBtn.onclick = function() {
-    openShop(stuffy);
-  };
-  
-  document.getElementById("detailsOverlay").style.display = "flex";
-  document.getElementById("closeDetails").onclick = function() {
-    document.getElementById("detailsOverlay").style.display = "none";
-  };
-}
-
-function animatePurchaseSuccess(item) {
-  const detailImageEl = document.getElementById("detailImage");
-  // Ensure the details overlay is visible so the animation can be seen.
-  if (detailImageEl) {
-    detailImageEl.classList.add("capture-success");
-  }
-  
-  // Trigger a confetti effect (using the canvas-confetti library)
-  confetti({
-    particleCount: 50,
-    spread: 60,
-    origin: { y: 0.5 }
-  });
-  
-  // Remove the animation class after a short delay
-  setTimeout(() => {
-    if (detailImageEl) {
-      detailImageEl.classList.remove("capture-success");
+      document.getElementById("collectionModal").style.display = "none";
+      
+      const stuffy = capturedStuffies.find(s => s.id === stuffyId);
+      if (!stuffy) return;
+      
+      document.getElementById("detailName").innerText = stuffy.name;
+      document.getElementById("detailImage").src = stuffy.image;
+      document.getElementById("detailEats").innerText = `Eats: ${stuffy.eats || "Unknown"}`;
+      document.getElementById("detailFavColor").innerText = `Favorite Color: ${stuffy.favoriteColor || "Unknown"}`;
+      document.getElementById("detailFavActivity").innerText = `Loves: ${stuffy.favoriteActivity || "Unknown"}`;
+      document.getElementById("detailRarity").innerText = `Rarity: ${stuffy.rarity.name}`;
+      document.getElementById("detailGold").innerText = `Gold Value: ${stuffy.gold}`;
+      
+      // Update purchased items display:
+      const purchasedItemsContainer = document.getElementById("purchasedItems");
+      if (stuffy.items && stuffy.items.length > 0) {
+        purchasedItemsContainer.innerHTML = stuffy.items.map(item => `
+          <div style="margin: 5px;">
+            <img src="${item.image}" alt="${item.id}" style="width:50px; height:50px; border: 2px solid #ccc; border-radius:5px; object-fit:cover;">
+          </div>
+        `).join('');
+      } else {
+        purchasedItemsContainer.innerHTML = "None purchased yet.";
+      }
+      
+      // Show Sell and Shop buttons
+      const sellBtn = document.getElementById("sellStuffyBtn");
+      sellBtn.style.display = "inline-block";
+      sellBtn.onclick = function() {
+        sellStuffy(stuffyId);
+      };
+      const shopBtn = document.getElementById("openShopBtn");
+      shopBtn.style.display = "inline-block";
+      shopBtn.onclick = function() {
+        openShop(stuffy);
+      };
+      
+      document.getElementById("detailsOverlay").style.display = "flex";
+      document.getElementById("closeDetails").onclick = function() {
+        document.getElementById("detailsOverlay").style.display = "none";
+      };
     }
-  }, 1000);
-}
-
-function animatePurchaseFail() {
-  const shopContent = document.getElementById("shopContent");
-  if (shopContent) {
-    shopContent.classList.add("shake");
-    setTimeout(() => {
-      shopContent.classList.remove("shake");
-    }, 500);
-  }
-}
-
     
-    /***** Sell Functionality *****/
     function sellStuffy(stuffyId) {
       const index = capturedStuffies.findIndex(s => s.id === stuffyId);
       if (index === -1) return;
@@ -963,20 +979,16 @@ function animatePurchaseFail() {
       updateFullCollection();
       updateGoldDisplay();
       document.getElementById("detailsOverlay").style.display = "none";
-      // (No alert, as requested)
     }
     
     /***** SHOP FUNCTIONALITY *****/
     function openShop(stuffy) {
-      // Open the shop modal and filter items based on this stuffy's rarity (using cssClass)
       const shopModal = document.getElementById("shopModal");
       const shopTitle = document.getElementById("shopTitle");
       shopTitle.innerText = `${stuffy.name}'s Shop`;
       
-      // We'll display items in three categories: toys, candy, houses.
       let inventoryHTML = "";
       for (let category in shopInventory) {
-        // Filter items available for this stuffy's rarity
         const items = shopInventory[category].filter(item => item.availableFor.includes(stuffy.rarity.cssClass));
         if (items.length) {
           inventoryHTML += `<h3>${category.charAt(0).toUpperCase() + category.slice(1)}</h3><div>`;
@@ -1001,42 +1013,36 @@ function animatePurchaseFail() {
     
     // Purchase an item from the shop for a specific stuffy
     function purchaseItem(itemId, category, stuffyId) {
-  let item = shopInventory[category].find(it => it.id === itemId);
-  if (!item) return;
-  
-  // Check if the player has enough gold; if not, play the failure animation
-  if (playerGold < item.cost) {
-    animatePurchaseFail();
-    showAlert("Not enough gold!");
-    return;
-  }
-  
-  // Deduct gold and update the display
-  playerGold -= item.cost;
-  savePlayerGold();
-  updateGoldDisplay();
-  
-  // Find the stuffed animal and add the purchased item to its inventory
-  let stuffy = capturedStuffies.find(s => s.id === stuffyId);
-  if (!stuffy) return;
-  if (!stuffy.items) {
-    stuffy.items = [];
-  }
-  stuffy.items.push(item);
-  saveCapturedStuffies();
-  showAlert(`${item.id} purchased for ${item.cost} gold!`);
-  
-  // Refresh the details display so that the target element (detailImage) is visible
-  showDetails(stuffyId);
-  
-  // Trigger the success animation after a short delay to ensure the details overlay is open
-  setTimeout(() => {
-    animatePurchaseSuccess(item);
-  }, 100);
-}
-
-
-
+      let item = shopInventory[category].find(it => it.id === itemId);
+      if (!item) return;
+      
+      if (playerGold < item.cost) {
+        animatePurchaseFail();
+        showAlert("Not enough gold!");
+        return;
+      }
+      
+      playerGold -= item.cost;
+      savePlayerGold();
+      updateGoldDisplay();
+      
+      let stuffy = capturedStuffies.find(s => s.id === stuffyId);
+      if (!stuffy) return;
+      if (!stuffy.items) {
+        stuffy.items = [];
+      }
+      stuffy.items.push(item);
+      saveCapturedStuffies();
+      showAlert(`${item.id} purchased for ${item.cost} gold!`);
+      
+      // Refresh the details display so the overlay is visible
+      showDetails(stuffyId);
+      
+      // Trigger success animation after a short delay
+      setTimeout(() => {
+        animatePurchaseSuccess(item);
+      }, 100);
+    }
     
     /***** FULL COLLECTION MODAL *****/
     function updateFullCollection() {
