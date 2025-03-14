@@ -135,7 +135,6 @@
     }
     
     /* Enhanced Capture Animations */
-    /* Success: glow, pulse, spin, shrink */
     .capture-success {
       animation: successAnimation 0.8s forwards;
     }
@@ -158,7 +157,6 @@
       0% { opacity: 1; }
       100% { opacity: 0; }
     }
-    /* Failure: red X and shake */
     .fail-overlay {
       position: absolute;
       top: 50%;
@@ -188,6 +186,11 @@
       text-align: center;
     }
     #collection h2 { margin-top: 0; }
+    /* Gold display added */
+    #goldDisplay {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
     .stuffy-img { 
       width: 50px; 
       height: 50px; 
@@ -214,7 +217,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 7000; /* Raised z-index so it appears above the full collection modal */
+      z-index: 7000;
       padding: 10px;
       box-sizing: border-box;
     }
@@ -242,6 +245,20 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+    }
+    /* Sell button styling */
+    #sellStuffyBtn {
+      padding: 8px 16px;
+      margin-top: 10px;
+      background-color: #FFD700;
+      color: #333;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: none;
+    }
+    #sellStuffyBtn:hover {
+      background-color: #FFC107;
     }
     /* Greyscale for uncaptured stuffies in the collection */
     .uncaptured {
@@ -278,6 +295,7 @@
       <p id="detailFavActivity"></p>
       <p id="detailRarity"></p>
       <p id="detailGold"></p>
+      <button id="sellStuffyBtn">Sell for Gold</button>
       <button id="closeDetails">Close</button>
     </div>
   </div>
@@ -285,6 +303,8 @@
   <!-- Collection Display -->
   <div id="collection">
     <h2>Your Captured Stuffies</h2>
+    <!-- Gold display -->
+    <div id="goldDisplay">Gold: <span id="goldValue">0</span></div>
     <div id="collectionDisplay">No stuffed animals captured yet.</div>
     <button onclick="openCollectionModal()">View Full Collection</button>
   </div>
@@ -305,11 +325,21 @@
     let capturedStuffies = [];
     let activeStuffies = [];
     let allStuffies = []; // All stuffies from JSON
+    
     const maxStuffies = 100; // Total within 3 miles
     const innerRadiusLimit = 1609; // 1 mile in meters
     const outerRadiusLimit = 1609 * 3; // 3 miles in meters
     const respawnDelay = 10 * 60 * 1000; // 10 minutes
     let playerLat, playerLng;
+    
+    // Player gold management
+    let playerGold = Number(localStorage.getItem("playerGold")) || 0;
+    function savePlayerGold() {
+      localStorage.setItem("playerGold", playerGold);
+    }
+    function updateGoldDisplay() {
+      document.getElementById("goldValue").innerText = playerGold;
+    }
     
     // Rarity levels (fixed capture thresholds) – JSON should supply "rarity" (normal, rare, epic, legendary)
     const rarityLevels = {
@@ -380,7 +410,7 @@
       "Zeus": "Subject49.png",
       "Lola": "Subject50.png"
     };
-
+    
     /***** LOAD STUFFY DETAILS FROM JSON *****/
     fetch('stuffyDetails.json')
       .then(response => response.json())
@@ -522,16 +552,17 @@
     const rollCaptureBtn = document.getElementById("rollCaptureBtn");
     const closeCaptureBtn = document.getElementById("closeCapture");
     
+    // Load captured stuffies and update gold display on page load
     window.addEventListener("load", function() {
-  const savedStuffies = localStorage.getItem("capturedStuffies");
-  if (savedStuffies) {
-    capturedStuffies = JSON.parse(savedStuffies);
-    updateStuffyCollection();
-    updateFullCollection();
-  }
-});
-
-
+      const savedStuffies = localStorage.getItem("capturedStuffies");
+      if (savedStuffies) {
+        capturedStuffies = JSON.parse(savedStuffies);
+        updateStuffyCollection();
+        updateFullCollection();
+      }
+      updateGoldDisplay();
+    });
+    
     function startCapture(stuffy, marker) {
       captureOverlay.style.display = "flex";
       stuffyNameEl.innerText = stuffy.name;
@@ -557,69 +588,69 @@
         captureContent.style.borderColor = "#fff";
       }
       
-      // Disable cancel roll while capturing
+      // Enable buttons
       rollCaptureBtn.disabled = false;
       closeCaptureBtn.disabled = false;
       
       // Begin capture roll process
       rollCaptureBtn.onclick = function() {
-  rollCaptureBtn.disabled = true;
-  animateWheelRoll(2000, (finalRoll) => {
-    rollDisplayEl.innerText = finalRoll;
-    if (finalRoll >= stuffy.rarity.successRate) {
-      // Success: animate image, show overlay text, and trigger confetti
-      stuffyImageEl.classList.add("capture-success");
-      let capturedOverlay = document.createElement("div");
-      capturedOverlay.className = "captured-text";
-      capturedOverlay.innerText = "Captured!";
-      document.getElementById("captureContent").appendChild(capturedOverlay);
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-      setTimeout(() => {
-        capturedStuffies.push(stuffy);
-        saveCapturedStuffies(); // Save to localStorage
-        stuffy.captured = true;
-        updateStuffyCollection();
-        map.removeLayer(marker);
-        activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
-        updateFullCollection();
-        setTimeout(() => spawnStuffies(), respawnDelay);
-        rollCaptureBtn.disabled = false;
-        captureOverlay.style.display = "none";
-        if (capturedOverlay && capturedOverlay.parentNode) {
-          capturedOverlay.parentNode.removeChild(capturedOverlay);
-        }
-        stuffyImageEl.classList.remove("capture-success");
-      }, 1000);
-    } else {
-      // Failure branch remains unchanged
-      captureOverlay.classList.add("shake");
-      let failOverlay = document.createElement("div");
-      failOverlay.className = "fail-overlay";
-      failOverlay.innerText = "❌ Failed to Capture!";
-      document.getElementById("captureContent").appendChild(failOverlay);
-      setTimeout(() => {
-        map.removeLayer(marker);
-        activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
-        updateFullCollection();
-        setTimeout(() => spawnStuffies(), respawnDelay);
-        rollCaptureBtn.disabled = false;
-        captureOverlay.style.display = "none";
-        captureOverlay.classList.remove("shake");
-        if (failOverlay && failOverlay.parentNode) {
-          failOverlay.parentNode.removeChild(failOverlay);
-        }
-      }, 1000);
-    }
-  });
-};
-
+        rollCaptureBtn.disabled = true;
+        animateWheelRoll(2000, (finalRoll) => {
+          rollDisplayEl.innerText = finalRoll;
+          if (finalRoll >= stuffy.rarity.successRate) {
+            // Success: animate image, show overlay text, and trigger confetti
+            stuffyImageEl.classList.add("capture-success");
+            let capturedOverlay = document.createElement("div");
+            capturedOverlay.className = "captured-text";
+            capturedOverlay.innerText = "Captured!";
+            document.getElementById("captureContent").appendChild(capturedOverlay);
+            confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+            setTimeout(() => {
+              capturedStuffies.push(stuffy);
+              saveCapturedStuffies(); // Save to localStorage
+              stuffy.captured = true;
+              updateStuffyCollection();
+              map.removeLayer(marker);
+              activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
+              updateFullCollection();
+              setTimeout(() => spawnStuffies(), respawnDelay);
+              rollCaptureBtn.disabled = false;
+              captureOverlay.style.display = "none";
+              if (capturedOverlay && capturedOverlay.parentNode) {
+                capturedOverlay.parentNode.removeChild(capturedOverlay);
+              }
+              stuffyImageEl.classList.remove("capture-success");
+            }, 1000);
+          } else {
+            // Failure branch
+            captureOverlay.classList.add("shake");
+            let failOverlay = document.createElement("div");
+            failOverlay.className = "fail-overlay";
+            failOverlay.innerText = "❌ Failed to Capture!";
+            document.getElementById("captureContent").appendChild(failOverlay);
+            setTimeout(() => {
+              map.removeLayer(marker);
+              activeStuffies = activeStuffies.filter(s => s.id !== stuffy.id);
+              updateFullCollection();
+              setTimeout(() => spawnStuffies(), respawnDelay);
+              rollCaptureBtn.disabled = false;
+              captureOverlay.style.display = "none";
+              captureOverlay.classList.remove("shake");
+              if (failOverlay && failOverlay.parentNode) {
+                failOverlay.parentNode.removeChild(failOverlay);
+              }
+            }, 1000);
+          }
+        });
+      };
+      
       // Disable closing the capture overlay while capturing
       closeCaptureBtn.onclick = function() {
-        if (rollCaptureBtn.disabled) return; // Do nothing if a roll is in progress
+        if (rollCaptureBtn.disabled) return;
         captureOverlay.style.display = "none";
         rollCaptureBtn.disabled = false;
       };
@@ -637,28 +668,25 @@
       }, 100);
     }
     
-
     function saveCapturedStuffies() {
-  const savableStuffies = capturedStuffies.map(stuffy => {
-    return {
-      id: stuffy.id,
-      name: stuffy.name,
-      rarity: stuffy.rarity,
-      lat: stuffy.lat,
-      lng: stuffy.lng,
-      gold: stuffy.gold,
-      image: stuffy.image,
-      eats: stuffy.eats,
-      favoriteColor: stuffy.favoriteColor,
-      favoriteActivity: stuffy.favoriteActivity,
-      captured: stuffy.captured
-    };
-  });
-  localStorage.setItem("capturedStuffies", JSON.stringify(savableStuffies));
-}
-
-
-
+      const savableStuffies = capturedStuffies.map(stuffy => {
+        return {
+          id: stuffy.id,
+          name: stuffy.name,
+          rarity: stuffy.rarity,
+          lat: stuffy.lat,
+          lng: stuffy.lng,
+          gold: stuffy.gold,
+          image: stuffy.image,
+          eats: stuffy.eats,
+          favoriteColor: stuffy.favoriteColor,
+          favoriteActivity: stuffy.favoriteActivity,
+          captured: stuffy.captured
+        };
+      });
+      localStorage.setItem("capturedStuffies", JSON.stringify(savableStuffies));
+    }
+    
     /***** COLLECTION DISPLAY & DETAILS CARD *****/
     function updateStuffyCollection() {
       let collectionDiv = document.getElementById("collectionDisplay");
@@ -672,24 +700,52 @@
     }
     
     function showDetails(stuffyId) {
-  // Hide the full collection modal so the details overlay appears on top
-  document.getElementById("collectionModal").style.display = "none";
-  
-  const stuffy = capturedStuffies.find(s => s.id === stuffyId);
-  if (!stuffy) return;
-  document.getElementById("detailName").innerText = stuffy.name;
-  document.getElementById("detailImage").src = stuffy.image;
-  document.getElementById("detailEats").innerText = `Eats: ${stuffy.eats || "Unknown"}`;
-  document.getElementById("detailFavColor").innerText = `Favorite Color: ${stuffy.favoriteColor || "Unknown"}`;
-  document.getElementById("detailFavActivity").innerText = `Loves: ${stuffy.favoriteActivity || "Unknown"}`;
-  document.getElementById("detailRarity").innerText = `Rarity: ${stuffy.rarity.name}`;
-  document.getElementById("detailGold").innerText = `Gold Value: ${stuffy.gold}`;
-  document.getElementById("detailsOverlay").style.display = "flex";
-  document.getElementById("closeDetails").onclick = function() {
-    document.getElementById("detailsOverlay").style.display = "none";
-  };
-}
-
+      // Hide the full collection modal so the details overlay appears on top
+      document.getElementById("collectionModal").style.display = "none";
+      
+      const stuffy = capturedStuffies.find(s => s.id === stuffyId);
+      if (!stuffy) return;
+      document.getElementById("detailName").innerText = stuffy.name;
+      document.getElementById("detailImage").src = stuffy.image;
+      document.getElementById("detailEats").innerText = `Eats: ${stuffy.eats || "Unknown"}`;
+      document.getElementById("detailFavColor").innerText = `Favorite Color: ${stuffy.favoriteColor || "Unknown"}`;
+      document.getElementById("detailFavActivity").innerText = `Loves: ${stuffy.favoriteActivity || "Unknown"}`;
+      document.getElementById("detailRarity").innerText = `Rarity: ${stuffy.rarity.name}`;
+      document.getElementById("detailGold").innerText = `Gold Value: ${stuffy.gold}`;
+      
+      // Show Sell button since this is a captured stuffy
+      const sellBtn = document.getElementById("sellStuffyBtn");
+      sellBtn.style.display = "inline-block";
+      sellBtn.onclick = function() {
+        sellStuffy(stuffyId);
+      };
+      
+      document.getElementById("detailsOverlay").style.display = "flex";
+      document.getElementById("closeDetails").onclick = function() {
+        document.getElementById("detailsOverlay").style.display = "none";
+      };
+    }
+    
+    /***** Sell Functionality *****/
+    function sellStuffy(stuffyId) {
+      const index = capturedStuffies.findIndex(s => s.id === stuffyId);
+      if (index === -1) return;
+      const stuffy = capturedStuffies[index];
+      // Add the gold value to the player's gold
+      playerGold += stuffy.gold;
+      // Remove the stuffy from capturedStuffies
+      capturedStuffies.splice(index, 1);
+      // Save updated capturedStuffies and playerGold
+      saveCapturedStuffies();
+      savePlayerGold();
+      // Update displays
+      updateStuffyCollection();
+      updateFullCollection();
+      updateGoldDisplay();
+      // Hide details overlay
+      document.getElementById("detailsOverlay").style.display = "none";
+      alert(`${stuffy.name} sold for ${stuffy.gold} gold!`);
+    }
     
     /***** Full Collection Modal *****/
     function updateFullCollection() {
@@ -715,7 +771,6 @@
     }
     
     function showAlert(message) {
-      // Alerts have been removed in favor of visual cues
       console.log(message);
     }
     
