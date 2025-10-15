@@ -1,0 +1,126 @@
+:root {
+  color-scheme: dark;
+  font-family: 'Oxanium', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: #05060d;
+  color: #f5f7ff;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top, #1a1d3b 0%, #05060d 65%);
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.canvas-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  background: rgba(8, 10, 24, 0.85);
+  border-top: 1px solid rgba(125, 143, 255, 0.25);
+}
+
+.hud {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(5, 6, 13, 0.8);
+  border: 1px solid rgba(125, 143, 255, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 0 18px rgba(95, 176, 255, 0.2);
+}
+
+.hud h1 {
+  font-size: 1.1rem;
+  margin: 0 0 0.25rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hud p {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(5, 6, 13, 0.92);
+  border-top: 1px solid rgba(125, 143, 255, 0.2);
+}
+
+.panel section {
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(125, 143, 255, 0.25);
+  border-radius: 10px;
+  background: rgba(11, 13, 32, 0.8);
+}
+
+.panel h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+}
+
+.panel ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  background: rgba(95, 176, 255, 0.16);
+  border: 1px solid rgba(95, 176, 255, 0.35);
+}
+
+.badge[data-tier="legendary"] {
+  background: rgba(255, 179, 71, 0.18);
+  border-color: rgba(255, 179, 71, 0.55);
+}
+
+.badge[data-tier="epic"] {
+  background: rgba(182, 130, 255, 0.18);
+  border-color: rgba(182, 130, 255, 0.55);
+}
+
+.badge[data-tier="rare"] {
+  background: rgba(113, 214, 255, 0.18);
+  border-color: rgba(113, 214, 255, 0.55);
+}
+
+kbd {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid rgba(125, 143, 255, 0.4);
+  font-family: 'Oxanium', monospace;
+  font-size: 0.75rem;
+}
